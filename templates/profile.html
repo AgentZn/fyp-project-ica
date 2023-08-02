@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>ICA Prototype - Video Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/static/img/ica_icon_circle.png" sizes="192x192">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/ica.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Intelligent Calisthenics Assistant (ICA)</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                    <li><a href="/record">Record</a></li>
+                    <li><a href="/member">Member</a></li>
+                    <li><a href="/push_up">Push Up</a></li>
+                    <li><a href="/sit_up">Sit Up</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {% if not session['sessID'] %}
+                    <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+                    {% else %}
+                    <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span>Logout</a></li>
+                    <li class="active"><a href="/profile"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid text-center">
+        <div class="row content">
+            <div class="col-sm-2 sidenav">
+                <p><a href="/member">Project Team Members</a></p>
+            </div>
+            <div class="col-sm-8 text-left">
+                <h1>ICA Prototype</h1>
+
+
+
+                <h1>User Profile</h1>
+                <p>Age: {{ age }}</p>
+                <p>Name: {{ name }}</p>
+                <p>Year of Birth: {{ yob }}</p>
+                <p>Fitness Level: {{ fitness_level }}</p>
+                <p>Total Score: {{ total_score }}</p>
+
+
+                <h2>Performance</h2>
+                Click to view Performance
+                <form action="/filter" method="POST">
+                    <input type="hidden" name="exercise" value="Push Ups">
+                    <button type="submit">Push Up</button>
+                </form>
+                <form action="/filter" method="POST">
+                    <input type="hidden" name="exercise" value="Sit Ups">
+                    <button type="submit">Sit Up</button>
+                </form>
+                <form action="/filter" method="POST">
+                    <input type="hidden" name="exercise" value="Squats with Ball">
+                    <button type="submit">Squats with Ball</button>
+                </form>
+                <form action="/filter" method="POST">
+                    <input type="hidden" name="exercise" value="Standing Broad Jump">
+                    <button type="submit">Standing Broad Jump</button>
+                </form>
+                <form action="/filter" method="POST">
+                    <input type="hidden" name="exercise" value="Grip Strength">
+                    <button type="submit">Grip Strength</button>
+                </form>
+                <form action="/filter" method="POST">
+                    <input type="hidden" name="exercise" value="2.4km run">
+                    <button type="submit">2.4km run</button>
+                </form>
+
+
+                <h3>Exercises you need to improve on: </h3>
+
+                {% if exercises_with_lowest_score|length == 0 %}
+                <p>You have not done any test yet. Please take a test to see the recommendations</p>
+                {% elif exercises_with_lowest_score|length == 6 %}
+                NIL<br>
+                <p>You have aced all stations, please maintain this result</p>
+                {% else %}
+                {% for exercise in exercises_with_lowest_score %}
+                <p>{{ exercise }}</p>
+                {% if exercise == "Push Ups" %}
+                <p>Recommendation: You can improve your Push Ups by incorporating regular push-up sets in your workout
+                    routine. Focus on maintaining proper form and gradually increase the number of reps over time.</p>
+                {% elif exercise == "Sit Ups" %}
+                <p>Recommendation: To improve your Sit Ups, practice doing sit-ups regularly. You can try different
+                    variations of sit-ups and gradually increase the number of reps to build core strength.</p>
+                {% elif exercise == "Squats with Ball" %}
+                <p>Recommendation: Work on your Squats with Ball by practicing squatting exercises with a stability
+                    ball. Focus on proper technique and gradually increase the difficulty level.</p>
+                {% elif exercise == "Grip Strength" %}
+                <p>Recommendation: To improve your Grip Strength, consider incorporating grip training exercises such as
+                    dead hangs, farmer's walks, or using grip strengtheners.</p>
+                {% elif exercise == "2.4km run" %}
+                <p>Recommendation: To improve your 2.4km run time, include regular running sessions in your training
+                    program. Focus on building endurance and speed through interval training.</p>
+                {% elif exercise == "Standing Broad Jump" %}
+                <p>Recommendation: Work on your Standing Broad Jump by incorporating plyometric exercises like box jumps
+                    and squat jumps to improve explosive power.</p>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                <h2>Best Scores</h2>
+                <table>
+                    <tr>
+                        <th>Exercise</th>
+                        <th>Best Good Count</th>
+                    </tr>
+                    {% for score in best_scores %}
+                    <tr>
+                        <td>{{ score.exercise }}</td>
+                        <td>{{ score.goodcount }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <!-- {% if histscores %}
+                <table>
+                    <tr>
+                        <th>Exercise</th>
+                        <th>Good Count</th>
+                        <th>Bad Count</th>
+                        <th>Positive Result</th>
+                        <th>Chart</th>
+                        <th>Video</th>
+                        <th>Generate Chart</th>
+                    </tr>
+                    {% for score in histscores %}
+                    <tr>
+                        <td>{{ score.exercise }}</td>
+                        <td>{{ score.goodcount }}</td>
+                        <td>{{ score.badcount }}</td>
+                        <td>{{ score.poseresult }}</td>
+                        <td>{{ score.chart }}</td>
+                        <td>{{ score.video }}</td>
+                        <td>
+                            <form action="/generate" method="POST">
+                                <input type="hidden" name="exercise" value="{{ score.poseresult }}">
+                                <button type="submit">Generate</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %} -->
+                </table>
+                {% else %}
+                <p>No scores available</p>
+                {% endif %}
+
+
+
+            </div>
+            <div class="col-sm-2 sidenav">
+                <div class="well">
+                    <p>Interested in this AD space? Contact .....</p>
+                </div>
+                <div class="well">
+                    <p>Interested in this AD space? Contact .....</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="container-fluid text-center">
+        <p>Republic Polytechnic IGO Project</p>
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>ICA Prototype - Video Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/static/img/ica_icon_circle.png" sizes="192x192">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/ica.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Intelligent Calisthenics Assistant (ICA)</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/">Home</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                    {% if session['sessID'] %}
+                    <li><a href="/record">Record</a></li>
+                    {% endif %}
+                    <li><a href="/member">Member</a></li>
+                    <li><a href="/push_up">Push Up</a></li>
+                    <li><a href="/sit_up">Sit Up</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {% if not session['sessID'] %}
+                    <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+                    {% else %}
+                    <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span>Logout</a></li>
+                    <li><a href="/profile"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid text-center">
+        <div class="row content">
+            <div class="col-sm-2 sidenav">
+                <p><a href="/member">Project Team Members</a></p>
+            </div>
+            <div class="col-sm-8 text-left">
+                <h1>ICA Prototype</h1>
+
+                <div>
+                    <button class="buttonr" onclick="document.location='/vidmaster'">Master Video</button>
+                </div>
+                <br />
+                <div>
+                    <h4>Minion Video:</h4>
+                    <div>
+                        <img src="static/img/push-up.png" width="150px" />
+                    </div>
+                    <div>
+                        <button class="buttong" onclick="document.location='/vidminion?face=rear&camerapos=1214'">REAR 12oclk 1.4m</button>
+                        <button class="buttong" onclick="document.location='/vidminion?face=rear&camerapos=1114'">REAR 11o'clk-1.4m</button>
+                        <button class="buttong" onclick="document.location='/vidminion?face=rear&camerapos=0914'">REAR 09o'clk-1.4m</button>
+                        <button class="buttong" onclick="document.location='/vidminion?face=rear&camerapos=0714'">REAR 07o'clk-1.4m</button>
+                    </div>
+                    <div><br /></div>                    
+                    <div>
+                        <button class="buttong" onclick="document.location='/vidminion?face=rear&camerapos=1204'">REAR 12oclk 0.4m</button>
+                        <button class="buttong" onclick="document.location='/vidminion?face=rear&camerapos=1104'">REAR 11o'clk-0.4m</button>
+                        <button class="buttong" onclick="document.location='/vidminion?face=rear&camerapos=0904'">REAR 09o'clk-0.4m</button>
+                        <button class="buttong" onclick="document.location='/vidminion?face=rear&camerapos=0704'">REAR 07o'clk-0.4m</button>
+                    </div>
+                    <div><br /></div>  
+                    <div>
+                        <img src="static/img/selfie.png" width="150px" />
+                    </div>
+                    <div>
+                        <button class="buttonb" onclick="document.location='/vidminion?face=front&camerapos=1214'">FRONT 12oclk 1.4m</button>
+                        <button class="buttonb" onclick="document.location='/vidminion?face=front&camerapos=1114'">FRONT 11o'clk-1.4m</button>
+                        <button class="buttonb" onclick="document.location='/vidminion?face=front&camerapos=0914'">FRONT 09o'clk-1.4m</button>
+                        <button class="buttonb" onclick="document.location='/vidminion?face=front&camerapos=0714'">FRONT 07o'clk-1.4m</button>
+                    </div>
+                    <div><br /></div>                    
+                    <div>
+                        <button class="buttonb" onclick="document.location='/vidminion?face=front&camerapos=1204'">FRONT 12oclk 0.4m</button>
+                        <button class="buttonb" onclick="document.location='/vidminion?face=front&camerapos=1104'">FRONT 11o'clk-0.4m</button>
+                        <button class="buttonb" onclick="document.location='/vidminion?face=front&camerapos=0904'">FRONT 09o'clk-0.4m</button>
+                        <button class="buttonb" onclick="document.location='/vidminion?face=front&camerapos=0704'">FRONT 07o'clk-0.4m</button>
+                    </div>
+                    <div><br /></div>                     
+                </div>
+
+
+
+            </div>
+            <div class="col-sm-2 sidenav">
+                <div class="well">
+                    <p>Interested in this AD space? Contact .....</p>
+                </div>
+                <div class="well">
+                    <p>Interested in this AD space? Contact .....</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="container-fluid text-center">
+        <p>Republic Polytechnic IGO Project</p>
+    </footer>
+
+</body>
+
+</html>

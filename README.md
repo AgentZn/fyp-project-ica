@@ -1,1 +1,2 @@
-# fyp-project-ica
+# Intelligent Calisthenics Assistant
+

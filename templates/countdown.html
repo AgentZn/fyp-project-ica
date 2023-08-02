@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Camera Test</title>
+    <style>
+      #videoContainer {
+        position: relative;
+        width: 640px;
+        height: 480px;
+      }
+      #countdown {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 72px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 0 10px black;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="videoContainer">
+      <video id="video" width="640" height="480" autoplay></video>
+      <div id="countdown"></div>
+    </div>
+    <button id="startButton">Start Recording</button>
+    <script>
+      var video = document.getElementById('video');
+      var countdown = document.getElementById('countdown');
+      var startButton = document.getElementById('startButton');
+      var audio = new Audio('audio/race-start-beeps-125125.mp3');
+      var recorder;
+
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          video.srcObject = stream;
+        })
+        .catch(function(error) {
+          console.log('Error:', error);
+        });
+
+        startButton.onclick = function() {
+        startButton.style.display = 'none';
+        countdown.style.display = 'block';
+        var count = 3;
+        countdown.innerHTML = count;
+        audio.play();
+        var countdownInterval = setInterval(function() {
+            if (count > 1) {
+            count--;
+            countdown.innerHTML = count;
+            } else if (count == 1) {
+            countdown.innerHTML = "Go";
+            setTimeout(function() {
+                clearInterval(countdownInterval);
+                countdown.style.display = 'none';
+                startRecording();
+            }, 1000);
+            count--;
+            }
+        }, 1000);
+        };
+
+      function startRecording() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function(stream) {
+            video.srcObject = stream;
+            recorder = new MediaRecorder(stream);
+            recorder.start();
+            setTimeout(stopRecording, 60000); // stop recording after 60 seconds
+          })
+          .catch(function(error) {
+            console.log('Error:', error);
+          });
+      }
+
+      function stopRecording() {
+        if (recorder && recorder.state !== 'inactive') {
+          recorder.stop();
+          video.srcObject = null;
+          startButton.style.display = 'block';
+        }
+      }
+
+    </script>
+  </body>
+</html>

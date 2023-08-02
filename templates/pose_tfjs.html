@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ICA Prototype</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.5.0/dist/tf.min.js"></script>
+
+  <style>
+    /* Remove the navbar's default margin-bottom and rounded borders */ 
+    .navbar {
+      margin-bottom: 0;
+      border-radius: 0;
+    }
+    
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 450px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      padding-top: 20px;
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+    
+    /* Set black background color, white text and some padding */
+    footer {
+      background-color: #555;
+      color: white;
+      padding: 15px;
+    }
+    
+    /* On small screens, set height to 'auto' for sidenav and grid */
+    @media screen and (max-width: 767px) {
+      .sidenav {
+        height: auto;
+        padding: 15px;
+      }
+      .row.content {height:auto;} 
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>                        
+        </button>
+        <a class="navbar-brand" href="#">Intelligent Calisthenics Assistant (ICA) </a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if session['sessID'] %}
+            <li><a href="/record">Record</a></li>
+            {% endif %}
+            <li><a href="/member">Member</a></li>
+            <li><a href="/push_up">Push Up</a></li>
+            <li><a href="/sit_up">Sit Up</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            {% if not session['sessID'] %}
+            <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+            {% else %}
+            <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span>Logout</a></li>
+            <li class="active"><a href="/profile"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid text-center">    
+    <div class="row content">
+      <div class="col-sm-2 sidenav">
+        <p><a href="#">Project Team Members</a></p>
+      </div>
+      <div class="col-sm-8 text-left"> 
+        <br>
+        
+        <canvas class="output_canvas_1" width="320px" height="240px" style="width:49%; height:49%"></canvas>
+        <canvas class="output_canvas_2" id="output_canvas_2" width="320px" height="240px" style="width:49%; height:49%"></canvas>
+
+        <video class="input_video" width="320px" height="240px" style="width:0%; height:0%"></video>
+
+        <img id="output_orig" style="width:100%; height:100%">
+        
+        <!-- temp output area for base64 encoded  -->
+        <!-- textarea id="result" style="width:100%; height:100%"></textarea><br -->
+
+        <!-- temp output for decoded image-->
+        <!--img id="myImage" style="width:100%; height:100%"><br -->
+
+        <br>(P) of Correct Pose&nbsp&nbsp&nbsp<span id="UndisposedMem">Undisposed Mem: 0 MB</span>
+        <input type="textarea" style="width:100%" id="poseResult" name="poseResult" readonly><br>
+        <br>Left Wrist (x)&nbsp<input type="textarea" style="width:20%" id="leftWrist" name="leftWrist" readonly>
+        &nbsp&nbsp&nbspRight Wrist (x)&nbsp</label><input type="textarea" style="width:20%" id="rightWrist" name="rightWrist" readonly>
+        
+        <br><br><button id="toggleSend" onclick="toggleSend()">X Send or Predict</button>
+        Sampling Rate <input type="number" id="samplingRate" min="20" max="30" value="24">
+
+        <br><br>ICA Server Status:&nbsp<span id="server_status">Connecting .....</span>
+        <br><br>Last 5 messages received from server<br>
+        Latest:&nbsp<ul id="msg_status_1"></ul>
+             4:&nbsp<ul id="msg_status_2"></ul>
+             3:&nbsp<ul id="msg_status_3"></ul>
+             2:&nbsp<ul id="msg_status_4"></ul>
+             1:&nbsp<ul id="msg_status_5"></ul>
+      </div>
+      <div class="col-sm-2 sidenav">
+        <div class="well">
+          <p>Interested in this AD space? Contact .....</p>
+        </div>
+        <div class="well">
+          <p>Interested in this AD space? Contact .....</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="container-fluid text-center">
+    <p>Republic Polytechnic IGO Project</p>
+  </footer>
+
+  <p id="pose_results" style="display:none;"></p>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script>
+  /* If the main page is served via https, the WebSocket must be served via
+         "wss" (WebSocket Secure) */
+  var scheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
+  var webSocketUri = scheme
+                     + window.location.hostname
+                     + (location.port ? ':'+location.port: '')
+                     + '/chat';
+      
+  /* this is the web sockets server, for easy testing, we will just hard-code the actual URL here first */
+  webSocketUri = "wss://united-idea-311914.et.r.appspot.com/chat";
+
+  /* Establish the WebSocket connection and register event handlers. */
+  var websocket = new WebSocket(webSocketUri);
+
+  // load the model(s), at this juncture testing prediction using tensorflow js
+  // The web sockets are not relevant but left as it is for the time being
+  var poseModel, flowModel;
+  (async function () {
+    poseModel = await tf.loadLayersModel("static/models/pose/model.json");
+    flowModel = await tf.loadLayersModel("static/models/flow/model.json");
+  })();
+
+  $(function() {
+ 
+      function log(text){
+        document.getElementById("server_status").innerHTML = text;
+      }
+
+      websocket.onopen = function() {
+        log('Connected');
+      };
+
+      websocket.onclose = function() {
+        log('Closed');
+      };
+
+      websocket.onmessage = function(e) {
+        var d = new Date();
+        log('Message received ' + d);
+        document.getElementById("msg_status_5").innerHTML = document.getElementById("msg_status_4").innerHTML;
+        document.getElementById("msg_status_4").innerHTML = document.getElementById("msg_status_3").innerHTML;
+        document.getElementById("msg_status_3").innerHTML = document.getElementById("msg_status_2").innerHTML;
+        document.getElementById("msg_status_2").innerHTML = document.getElementById("msg_status_1").innerHTML;
+        var serverOutput = e.data.substring(0, 100).replace(/,/g,", ");
+        document.getElementById("msg_status_1").innerHTML = serverOutput + "..... " + d;
+        document.getElementById('myImage').src = e.data;
+      };
+
+      websocket.onerror = function(e) {
+        log('Error (see console)');
+        console.log(e);
+      };
+
+  });
+
+  function sendToServer() {
+    // As a test, do encoding the canvas image, send to server and decode to confirm no data loss
+    var canvas = document.getElementsByClassName('output_canvas_1')[0];
+    var encodedImage = canvas.toDataURL('image/jpeg');
+    document.getElementById("result").value = encodedImage;
+    websocket.send(encodedImage);
+    // previously only the pose info was sent
+    // websocket.send("Pose Landmarks " + document.getElementById("pose_results").innerHTML);
+  }
+
+  async function classifyPose() {
+    let imagePoseOnly = document.getElementsByClassName('output_canvas_1')[0];
+    let imageOrig =  document.getElementsByClassName('input_video')[0];
+
+    let t_imagePoseOnly = tf.browser.fromPixels(imagePoseOnly)
+      .resizeNearestNeighbor([240, 135]).toFloat().expandDims();
+    let t_imageOrig = tf.browser.fromPixels(imageOrig)
+      .resizeNearestNeighbor([240, 135]).toFloat().expandDims();
+    let t_array = [t_imageOrig, t_imagePoseOnly];
+    let poseResult = await poseModel.predict(t_array).data();
+    document.getElementById("poseResult").value = "Lateral: " + poseResult[0].toFixed(3) +
+    " Front: " + poseResult[1].toFixed(3);
+  }
+
+  async function classifyFlow() {
+    let imageFlowOnly = document.getElementsByClassName('output_canvas_2')[0];
+    let t_imageFlowOnly = tf.browser.fromPixels(imageFlowOnly)
+      .resizeNearestNeighbor([240, 135]).toFloat().expandDims();
+    let flowResult = await flowModel.predict(t_imageFlowOnly).data();
+
+    let movtDir;
+    if (flowResult[0] > 0)
+      movtDir = "Down";
+    else if (flowResult[1] > 0)
+      movtDir = "No Movement";
+    else
+      movtDir = "Up";
+
+    document.getElementById("poseResult").value = movtDir + " " + document.getElementById("poseResult").value;
+  }
+
+  function toggleSend() {
+    var toggleButton = document.getElementById("toggleSend");
+    if (toggleButton.innerHTML == "X Send or Predict") {
+      toggleButton.innerHTML = "Send or Predict";
+    } else {
+      toggleButton.innerHTML = "X Send or Predict";
+    }
+  }
+
+</script>
+
+<script async src="https://docs.opencv.org/4.5.2/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+<script type="text/javascript">
+  var cap, frame2, prvs, hsv0, hsv1, hsv2, hsvVec, frame2, flow, flowVec, next,
+      mag, ang, rgb, OpenCvReady = false;
+  function onOpenCvReady() {
+    cv['onRuntimeInitialized'] = () => {
+      const videoElement = document.getElementsByClassName('input_video')[0];
+      cap = new cv.VideoCapture(videoElement);
+      // take first frame of the video
+      frame1 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC4);
+      cap.read(frame1);
+
+      prvs = new cv.Mat();
+      cv.cvtColor(frame1, prvs, cv.COLOR_RGBA2GRAY);
+      frame1.delete();
+      hsv = new cv.Mat();
+      hsv0 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      hsv1 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1, new cv.Scalar(255));
+      hsv2 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      hsvVec = new cv.MatVector();
+      hsvVec.push_back(hsv0); hsvVec.push_back(hsv1); hsvVec.push_back(hsv2);
+
+      frame2 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC4);
+      next = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      flow = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC2);
+      flowVec = new cv.MatVector();
+      mag = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC1);
+      ang = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC1);
+      rgb = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC3);
+
+      OpenCvReady = true;
+    }
+  }
+  function drawFlow() {
+    try {
+        let begin = performance.now();
+        if (OpenCvReady) {
+        cap.read(frame2);
+        cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY);
+        cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+        cv.split(flow, flowVec);
+        let u = flowVec.get(0);
+        let v = flowVec.get(1);
+        cv.cartToPolar(u, v, mag, ang);
+        u.delete(); v.delete();
+        ang.convertTo(hsv0, cv.CV_8UC1, 180/Math.PI/2);
+        cv.normalize(mag, hsv2, 0, 255, cv.NORM_MINMAX, cv.CV_8UC1);
+        cv.merge(hsvVec, hsv);
+        cv.cvtColor(hsv, rgb, cv.COLOR_HSV2RGB);
+        cv.imshow('output_canvas_2', rgb);
+        next.copyTo(prvs);
+        }
+
+        // schedule the next one.
+        // let delay = 1000/parseFloat(document.getElementById('samplingRate').value) - (performance.now() - begin);
+        // setTimeout(drawFlow, delay);
+    } catch (err) {
+        console.log(err);
+    }
+  }
+  // setTimeout is to schedule the next function call to draw the flow
+  // commented out to call drawFlow everytime when onResults() is invoked
+  // i.e. draw in realtime
+  // setTimeout(drawFlow, 0);
+</script>
+
+<script type="module">
+  const videoElement = document.getElementsByClassName('input_video')[0];
+  videoElement.style.visibility = "hidden";
+  const canvasElement = document.getElementsByClassName('output_canvas_1')[0];
+  // For mirror image, uncomment the following
+  // canvasElement.style.transform = "scale(-1, 1)";
+  const canvasCtx = canvasElement.getContext('2d');
+  var lastSent = performance.now();
+
+  function onResults(results) {
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.fillStyle = "black";
+    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+    // canvasCtx.drawImage(
+    //    results.image, 0, 0, canvasElement.width, canvasElement.height);
+    drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+                   {color: '#00FF00', lineWidth: 1});
+    drawLandmarks(canvasCtx, results.poseLandmarks,
+                  {color: '#FF0000', lineWidth: 0, radius: 1});
+    drawFlow();
+
+    document.getElementById("output_orig").src = results.image.toDataURL('image/jpeg');
+
+    // console.log(JSON.stringify(results.poseLandmarks));
+    // for demo out purpose, just print the left and right wrists
+    var left, right = "";
+    right = JSON.stringify(results.poseLandmarks[16]['x'].toPrecision(2)) + ' (' +
+      JSON.stringify(results.poseLandmarks[16]['visibility'].toPrecision(2)) + ')';
+    right = right.replace(/\"/g,"");
+    document.getElementById("rightWrist").value = right;
+    left = JSON.stringify(results.poseLandmarks[15]['x'].toPrecision(2)) + ' (' +
+      JSON.stringify(results.poseLandmarks[15]['visibility'].toPrecision(2)) + ')';
+    left = left.replace(/\"/g,"");
+    document.getElementById("leftWrist").value = left;
+    document.getElementById("pose_results").innerHTML = JSON.stringify(results.poseLandmarks);
+
+    // Send the image to the server according the sampling rate OR
+    // Predict according to the sampling rate
+    var timeInterval = 1000 / parseFloat(document.getElementById('samplingRate').value);
+    if (document.getElementById('toggleSend').innerHTML == "Send or Predict") {
+      if (performance.now() - lastSent >= timeInterval) {
+        // sendToServer();
+        tf.tidy (() => {
+          classifyPose();
+          classifyFlow();
+        });
+        // console.log(JSON.stringify(tf.memory()));
+        document.getElementById("UndisposedMem").innerHTML = "Undisposed Mem:" + (tf.memory().numBytes/ (1024 * 1024)).toFixed(1) + " MB";
+        lastSent = performance.now();
+      }
+    }
+    canvasCtx.restore();
+  }
+
+  const pose = new Pose({locateFile: (file) => {
+    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+  }});
+  pose.setOptions({
+      modelComplexity: 1,
+      smoothLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+  });
+  pose.onResults(onResults);
+  
+  const camera = new Camera(videoElement, {
+    onFrame: async () => {
+      await pose.send({image: videoElement});
+    },
+    width: 320,
+    height: 240
+  });
+  camera.start();
+
+</script>
+
+</html>

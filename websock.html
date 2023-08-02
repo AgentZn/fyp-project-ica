@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width-device-width, initial-scale=1.0">
+        <title>Web Sockets Demo</title>
+    </head>
+
+    <body>
+        <button onclick="sendMsg()">Send Msg</button>
+        <button onclick="closeSocket()">Close Socket</button>
+
+    </body>
+
+    <script>
+        // Create WebSocket connection.
+        const socket = new WebSocket('ws://localhost:5001');
+
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+        socket.send('Connected to Server!');
+        });
+
+        // Listen for messages
+        socket.addEventListener('message', function (event) {
+        console.log('Message from server ', event.data);
+        });
+
+        // Connection closed
+        socket.addEventListener('close', function (event) {
+        socket.send('Disconneted from Server!');
+        });
+
+        // Listen for messages
+        socket.addEventListener('message', function (event) {
+        console.log('Message from server ', event.data);
+        });
+
+        const sendMsg = () => {
+            socket.send('Hello from client');
+        }
+
+        const closeSocket = () => {
+            socket.send('Close socket');
+        }
+
+    </script>
+</html>
