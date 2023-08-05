@@ -788,12 +788,12 @@ def profile():
     fitness_level = get_fitness_level(age, total_score)
 
     exercise_score = {
-        "Push Ups": pushup_score,
-        "Sit Ups": situp_score,
-        "Squats with Ball": squat_score,
-        "Grip Strength": grip_score,
-        "2.4Km Run": run_score,
-        "Standing Broad Jump": jump_score,
+        "Push Ups": best_push_up_score,
+        "Sit Ups": best_sit_up_score,
+        "Squats with Ball": best_squats_with_ball_score,
+        "Grip Strength": best_grip_strength_score,
+        "2.4Km Run": best_2_4km_run_score,
+        "Standing Broad Jump": best_standing_broad_jump_score,
     }
     lowest_score = min(exercise_score.values())
 
