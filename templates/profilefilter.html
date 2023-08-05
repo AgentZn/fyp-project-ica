@@ -70,6 +70,11 @@
                     // Retrieve scores from Flask template variable
                     var scores = JSON.parse('{{ scores | tojson | safe }}');
 
+                    // Sort the scores array based on timestamps
+                    scores.sort(function (a, b) {
+                        return new Date(a.timestamp) - new Date(b.timestamp);
+                    });
+                    
                     // Create datasets array to hold the data for each exercise
                     var datasets = [];
 

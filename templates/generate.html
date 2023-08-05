@@ -21,29 +21,20 @@
         var badCount = "{{ bad_count }}";
         var poseres = "{{ poseresult }}";
 
-        // Create a line chart
+        // Create a pie chart
         var ctx = document.getElementById('chart').getContext('2d');
         var chart = new Chart(ctx, {
-            type: 'bar',
+            type: 'pie',
             data: {
                 labels: ['Good Count', 'Bad Count'],
                 datasets: [{
-                    label: exercise,
                     data: [goodCount, badCount],
                     backgroundColor: ['green', 'red'],
                     borderWidth: 1
                 }]
             },
             options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
+                responsive: true
             }
         });
     </script>
