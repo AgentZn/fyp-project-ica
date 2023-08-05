@@ -1066,7 +1066,10 @@ def insert_record():
             image_file = request.files["file"]
 
             # Convert the file to a binary large object (BLOB)
-            image_data = BytesIO(image_file.read()).getvalue()
+            if image_file:
+                image_data = BytesIO(image_file.read()).getvalue()
+            else:
+                image_data = None
 
             query = "INSERT INTO fyp.basicscores (rid, badcount, chart, date, excount, exercise, goodcount, poseresult, user_id, video) VALUES (%s, %s, %s, toTimestamp(now()), %s, %s, %s, %s, %s, NULL);"
 
