@@ -525,13 +525,13 @@ def profile():
             if age < acceptable_age:
                 for agegroup in male_r_bench_age_mapping.keys():
                     if age == agegroup:
-                        if good_count <= male_r_bench_age_mapping[agegroup]:
+                        if good_count <= male_r_bench_age_mapping[agegroup] and good_count != 0:
                             fact = "Above Cohort"
                         else:
                             fact = "Below Cohort"
             else:
                 if age >= 20:
-                    if good_count <= male_r_bench_age_mapping[20]:
+                    if good_count <= male_r_bench_age_mapping[20] and good_count != 0:
                         fact = "Above Cohort"
                     else:
                         fact = "Below Cohort"
@@ -540,13 +540,13 @@ def profile():
             if age < acceptable_age:
                 for agegroup in female_r_bench_age_mapping.keys():
                     if age == agegroup:
-                        if good_count <= female_r_bench_age_mapping[agegroup]:
+                        if good_count <= female_r_bench_age_mapping[agegroup] and good_count != 0:
                             fact = "Above Cohort"
                         else:
                             fact = "Below Cohort"
             else:
                 if age >= 20:
-                    if good_count <= female_r_bench_age_mapping[20]:
+                    if good_count <= female_r_bench_age_mapping[20] and good_count != 0:
                         fact = "Above Cohort"
                     else:
                         fact = "Below Cohort"     
