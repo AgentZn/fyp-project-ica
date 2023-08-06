@@ -859,17 +859,37 @@ def filter_profile():
     yob = user_row.yob
 
     score_history = "SELECT * FROM fyp.basicscores WHERE user_id = %s AND exercise = %s ALLOW FILTERING"
+    g_score_history = "SELECT * FROM fyp.gripscore WHERE user_id = %s AND exercise = %s ALLOW FILTERING"
+    r_score_history = "SELECT * FROM fyp.runscore WHERE user_id = %s AND exercise = %s ALLOW FILTERING"
+    j_score_history = "SELECT * FROM fyp.jumpscore WHERE user_id = %s AND exercise = %s ALLOW FILTERING"
+
     score_result = session.execute(score_history, (sessionID, exercise))
+    g_score_result = session.execute(g_score_history, (sessionID, exercise))
+    r_score_result = session.execute(r_score_history, (sessionID, exercise))
+    j_score_result = session.execute(j_score_history, (sessionID, exercise))
+
     histscores = []
 
     for score_row in score_result:
         histscores.append(score_row)
-
+    for score_row in g_score_result:
+        histscores.append(score_row)
+    for score_row in r_score_result:
+        histscores.append(score_row)
+    for score_row in j_score_result:
+        histscores.append(score_row)
     # Retrieve the selected exercise from the form data
 
     # Query scores for the user and the selected exercise
     score_query = "SELECT * FROM fyp.basicscores WHERE user_id = %s AND exercise = %s ALLOW FILTERING"
+    g_score_query = "SELECT * FROM fyp.gripscore WHERE user_id = %s AND exercise = %s ALLOW FILTERING"
+    r_score_query = "SELECT * FROM fyp.runscore WHERE user_id = %s AND exercise = %s ALLOW FILTERING"
+    j_score_query = "SELECT * FROM fyp.jumpscore WHERE user_id = %s AND exercise = %s ALLOW FILTERING"
+
     score_result = session.execute(score_query, (sessionID, exercise))
+    g_score_result = session.execute(g_score_query, (sessionID, exercise))
+    r_score_result = session.execute(r_score_query, (sessionID, exercise))
+    j_score_result = session.execute(j_score_query, (sessionID, exercise))
 
     scores = []
     for score_row in score_result:
@@ -878,6 +898,30 @@ def filter_profile():
                 "exercise": score_row.exercise,
                 "timestamp": score_row.date,
                 "goodcount": score_row.goodcount,
+            }
+        )
+    for score_row in g_score_result:
+        scores.append(
+            {
+                "exercise": score_row.exercise,
+                "timestamp": score_row.date,
+                "goodcount": score_row.weight,
+            }
+        )
+    for score_row in r_score_result:
+        scores.append(
+            {
+                "exercise": score_row.exercise,
+                "timestamp": score_row.date,
+                "goodcount": score_row.seconds,
+            }
+        )
+    for score_row in j_score_result:
+        scores.append(
+            {
+                "exercise": score_row.exercise,
+                "timestamp": score_row.date,
+                "goodcount": score_row.totaldist,
             }
         )
 
@@ -1121,11 +1165,10 @@ def insert_exercise_record():
         )
         return "Record uploaded successfully. <br><a href='/record'>Go Back</a>"
 
+
 def display_record():
     image_path = "generated_image.png"
     return render_template("displayRecord.html", image_path=image_path)
-
-
 
 
 @app.errorhandler(500)
