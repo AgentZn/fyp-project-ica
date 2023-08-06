@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>ICA Prototype - Video Master</title>
+    <link rel="icon" type="image/png" href="/static/img/ica_icon_circle.png" sizes="192x192">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/ica.css">
+</head>
+
+<body>
+
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Intelligent Calisthenics Assistant (ICA)</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/">Home</a></li>
+                    <li><a href="/">About</a></li>
+                    <li><a href="/">Contact</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid text-center">
+        <div class="row content">
+            <div class="col-sm-2 sidenav">
+                <p><a href="#">Project Team Members</a></p>
+            </div>
+            <div class="col-sm-8 text-left">
+                <h1>MASTER Video</h1>
+                <div id="msg_status"></div>
+                <div>ICA Server Status:&nbsp<span id="server_status">Connecting .....</span></div>
+                <br /><br />
+
+                <div class="col-sm-4 form-group">
+                    <label for="iExType">Exercise Type:</label>
+                    <select class="form-control" id="iExType">
+                        <option value="pushup" selected>Push Up</option>
+                        <option value="situp">Sit Up</option>
+                    </select>
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label for="iSubject">Subject:</label>
+                    <input class="form-control" type="number" id="iSubject" min="1" max="99" value="1" />
+                </div>
+
+                <div class="col-sm-8 form-group">
+                    <label for="iSubjectAction">Subject Action:</label>
+                    <select class="form-control" id="iSubjectAction">
+                        <option value="NML" selected>Normal</option>
+                        <option value="BTH">Back Too High</option>
+                        <option value="BTL">Back Too Low</option>
+                        <option value="BTH_ANS_U">Back Too High, Arms Not Straight, Up Position</option>
+                        <option value="BTH_ANFB_D">Back Too High, Arms Not Fully Bend, Down Position</option>
+                        <option value="BTL_ANS_U">Back Too Low, Arms Not Straight, Up Position</option>
+                        <option value="BTL_ANFB_D">Back Too Low, Arms Not Fully Bend, Down Position</option>
+                        <option value="BTH_AS_U">Back Too High, Arms Straight, Up Position</option>
+                        <option value="BTH_AFB_D">Back Too High, Arms Fully Bend, Down Position</option>
+                        <option value="BTL_AS_U">Back Too Low, Arms Straight, Up Position</option>
+                        <option value="BTL_AFB_D">Back Too Low, Arms Fully Bend, Down Position</option>
+                        <option value="BS_ANS_U">Back Straight, Arms Not Straight, Up Position</option>
+                        <option value="BS_ANFB_D">Back Straight, Arms Not Fully Bend, Down Position</option>
+                    </select>
+                </div>
+
+                <div class="col-sm-8 form-group">
+                    <button id="toggleStartStop" onclick="toggleStartStop()">START</button>
+                </div>
+            </div>
+
+
+
+            <div class="col-sm-2 sidenav">
+                <div class="well">
+                    <p>Interested in this AD space? Contact .....</p>
+                </div>
+                <div class="well">
+                    <p>Interested in this AD space? Contact .....</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="container-fluid text-center">
+        <p>Republic Polytechnic IGO Project</p>
+    </footer>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script>
+    // [START gae_flex_websockets_js]
+    /* If the main page is served via https, the WebSocket must be served via
+           "wss" (WebSocket Secure) */
+    var scheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
+    var webSocketUri = scheme
+        + window.location.hostname
+        + (location.port ? ':' + location.port : '')
+        + '/chat';
+
+    /* this is the web sockets server, for easy testing, we will just hard-code the actual URL here first */
+    webSocketUri = "wss://united-idea-311914.et.r.appspot.com/chat";
+
+
+    /* Establish the WebSocket connection and register event handlers. */
+    var websocket = new WebSocket(webSocketUri);
+
+    $(function () {
+
+        function log(text) {
+            document.getElementById("server_status").innerHTML = text;
+        }
+
+        websocket.onopen = function () {
+            log('Connected');
+        };
+
+        websocket.onclose = function () {
+            log('Closed');
+        };
+
+        websocket.onmessage = function (e) {
+            var d = new Date().toLocaleString('en-SG', {
+                weekday: 'short', // long, short, narrow
+                day: '2-digit', // numeric, 2-digit
+                year: 'numeric', // numeric, 2-digit
+                month: 'short', // numeric, 2-digit, long, short, narrow
+                hour: '2-digit', // numeric, 2-digit
+                minute: '2-digit', // numeric, 2-digit
+                second: '2-digit', // numeric, 2-digit
+            });
+            log('Message received ' + d);
+            var serverOutput = e.data.substring(0, 100).replace(/,/g, ", ");
+            //document.getElementById("msg_status").innerHTML = serverOutput + "..... ";
+
+        };
+
+        websocket.onerror = function (e) {
+            log('Error (see console)');
+            console.log(e);
+        };
+
+    });
+    // [END gae_flex_websockets_js]
+
+    function sendToServer() {
+        // As a test, do encoding the canvas image, send to server and decode to confirm no data loss
+        //document.getElementById("msg_status").innerHTML = document.getElementById("toggleStartStop").innerHTML;
+        toggleStartStopMsg = document.getElementById("toggleStartStop").innerHTML;
+        if (toggleStartStopMsg === "STARTED... Cick to STOP") {
+            websocket.send("STARTED... Cick to STOP");
+        }
+        else {
+            varDelimiter = '-';
+            var varExType = document.querySelector('#iExType').value;
+            var varSubject = 'sub' + document.querySelector('#iSubject').value;
+            var varSubjectAction = document.querySelector('#iSubjectAction').value;
+            var varExTypeSubjectAction = varExType.concat(varDelimiter, varSubject, varDelimiter, varSubjectAction);            
+            websocket.send("START-" +varExTypeSubjectAction);
+        }
+
+    }
+
+    function toggleStartStop() {
+        var toggleButton = document.getElementById("toggleStartStop");
+        if (toggleButton.innerHTML == "START") {
+            toggleButton.innerHTML = "STARTED... Cick to STOP";
+        } else {
+            toggleButton.innerHTML = "START";
+        }
+        sendToServer();
+
+    }
+
+
+</script>
+
+</html>

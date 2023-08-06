@@ -1,0 +1,235 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>ICA Prototype - Video Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/static/img/ica_icon_circle.png" sizes="192x192">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/ica.css">
+    <style>
+        .c-posts {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: top;
+            padding: 5%;
+
+            &__item {
+                flex-grow: 1;
+                padding-bottom: 2em;
+
+                &:first-child {
+                    flex-grow: 2;
+                }
+            }
+        }
+
+        @media all and (min-width:600px) {
+            .c-posts {
+                &__item {
+                    flex-basis: 50%;
+                    padding-right: 5%;
+
+                    &:first-child {
+                        flex-basis: 100%;
+                    }
+                }
+            }
+        }
+
+        @media all and (min-width:1000px) {
+            .c-posts {
+                &__item {
+                    flex-basis: 33%;
+
+                    &:first-child {
+                        flex-basis: 66%;
+                    }
+                }
+            }
+        }
+
+        @media all and (min-width:1400px) {
+            .c-posts {
+                &__item {
+                    flex-basis: 25%;
+
+                    &:first-child {
+                        flex-basis: 50%;
+                    }
+                }
+            }
+        }
+
+        /* Other Non-Flexbox Related Styles */
+        .c-header,
+        .c-footer {
+            background: #EDD382;
+            text-align: center;
+            padding: 2em;
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 1.4em;
+            font-weight: 300;
+            line-height: 1.6em;
+
+            h1,
+            h2,
+            p {
+                max-width: 40em;
+                margin: 0 auto;
+
+                &:not(:last-child) {
+                    margin-bottom: 1em;
+                }
+            }
+
+            h1 {
+                text-transform: uppercase;
+                font-weight: 900;
+            }
+
+            a {
+                color: #000;
+            }
+        }
+
+        .c-footer {
+            p {
+                font-weight: 300;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', Times, serif;
+            line-height: 1.6em;
+            padding: 0;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: calc(130% + 1vw);
+            font-weight: normal;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            font-weight: normal;
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+
+        a {
+            color: #0F5257;
+        }
+
+        .c-btn {
+            color: #000;
+            display: inline-block;
+            border-bottom: 4px solid #000;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-family: 'Source Sans Pro', sans-serif;
+            font-weight: 900;
+            letter-spacing: .1em;
+            padding: .3em 0;
+            position: relative;
+            transition: .2s all;
+
+            &:before {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                width: 100%;
+                background: #FF521B;
+                height: 0%;
+                transition: .2s all;
+                left: 0;
+                z-index: -10;
+            }
+
+            &:hover {
+                padding-left: .75em;
+                padding-right: .75em;
+                color: #fff;
+                border-color: #FF521B;
+
+                &:before {
+                    height: 100%;
+                }
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Intelligent Calisthenics Assistant (ICA)</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                    <li class="active"><a href="/about">About</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                    {% if session['sessID'] %}
+                    <li><a href="/record">Record</a></li>
+                    {% endif %}
+                    <li><a href="/member">Member</a></li>
+                    <li><a href="/push_up">Push Up</a></li>
+                    <li><a href="/sit_up">Sit Up</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {% if not session['sessID'] %}
+                    <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+                    {% else %}
+                    <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span>Logout</a></li>
+                    <li><a href="/profile"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+    </nav>
+    <header class="c-header">
+        <h1>Intelligent Fitness Assistant Project</h1>
+        <p>The Intelligent Fitness Assistant (IFA) is a mobile web or mobile application that tracks the proficiency of human subjects doing push-ups and sit-ups.</p>
+    </header>
+    <section class="c-posts">
+        <article class="c-posts__item">
+            <h2>Motivation & Benefits</h2>
+            <p>Push-ups and sit-ups are the foundation exercises for the Individual Physical Proficiency Test (IPPT). Maintaining correct count and form requires a peer to advise the human subject performing these exercises. This makes it challenging for an individual to train well for IPPT on his own in a safe and productive manner. IFA will advise the human subject if he is performing these exercises correctly. Therefore, the individual can train alone without assistance. IFA will also maintain a history of attempts for recall and evaluation.</p>
+            <p><a href="#" class="c-btn">Read More</a></p>
+        </article>
+        <article class="c-posts__item">
+            <h2>Role of Student 1</h2>
+            <p>Recognise that the human subject is in the correct start position for push-ups. If it is correct, provide an audio signal, e.g., “Stand-by, 3, 2, 1 start”. As the push-ups are done, sound out the count, “1, 2, 3, 4 …..” for every correct push-up. For every incorrect push-up, sound out as “No count”. At the end of a configurable period, e.g., 30 secs remaining, sound out “Stop”. The human subject can access a history of attempts, e.g., date/time, exercise_type, number_invalid, invalid_reason, number_valid</p>
+            <p><a href="#" class="c-btn">Read More</a></p>
+        </article>
+        <article class="c-posts__item">
+            <h2>Role of Student 2</h2>
+            <p>Once the human subject start doing push-up, invoke algorithm and AI models to assess if the push-up form is good. As part of another project, the algorithm and AI models have already been completed. Student 2 needs to work closely with student 1 to convey the count and form to the human subject. Display visually the progress made, e.g., a green bar for correct and a red bar for incorrect as the push-ups are executed. The human subject will have audio and visual cues. Audio cue is the responsibility of Student 1. Record in the database all information for this attempt, e.g., date/time, exercise_type, number_invalid, invalid_reason, number_valid, body pose data. The supervisor will train interns on how to assess the models and data to be stored. 
+            </p>
+            <p><a href="#" class="c-btn">Read More</a></p>
+        </article>
+        <article class="c-posts__item">
+            <h2>Role of Student 3</h2>
+            <p>Same concept as Student 1 but for sit-ups. Due to the very different nature of sit-ups versus push-ups, Student 3 cannot simply copy from Student 1.</p>
+            <p><a href="#" class="c-btn">Read More</a></p>
+        </article>
+        
+        
+    </section>
+    <footer class="c-footer">
+        <p>Republic Polytechnic IGO Project</a></p>
+    </footer>
+</body>

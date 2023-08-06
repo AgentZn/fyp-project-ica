@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>ICA Prototype - Video Minion</title>
+    <link rel="icon" type="image/png" href="/static/img/ica_icon_circle.png" sizes="192x192">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/ica.css">
+    <style>
+        button {
+            margin: 0 3px 10px 0;
+            padding-left: 2px;
+            padding-right: 2px;
+            width: 99px;
+        }
+
+        button:last-of-type {
+            margin: 0;
+        }
+
+        p.borderBelow {
+            margin: 0 0 20px 0;
+            padding: 0 0 20px 0;
+        }
+
+        video {
+            vertical-align: top;
+            --width: 30vw;
+            width: var(--width);
+            height: calc(var(--width) * 0.5625);
+        }
+
+        video:last-of-type {
+            margin: 0 0 20px 0;
+        }
+
+        video#gumVideo {
+            margin: 0 20px 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Intelligent Calisthenics Assistant (ICA)</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/">Home</a></li>
+                    <li><a href="/">About</a></li>
+                    <li><a href="/">Contact</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid text-center">
+        <div class="row content">
+            <div class="col-sm-2 sidenav">
+                <p><a href="#">Project Team Members</a></p>
+            </div>
+            <div class="col-sm-8 text-left">
+
+                <h1>Minion Video</h1>
+                <div id="msg_status"></div>
+                <div>ICA Server Status:&nbsp<span id="server_status">Connecting .....</span></div>
+                <div id="img_container_msg"></div>
+                <br /><br />
+                <div class="col-sm-4 form-group">
+                    <label for="iFaceMode">Camera Facing:</label>
+                    <select class="form-control" id="iFaceMode">
+                        <option value="user" {% if gFaceMode=='front' %} selected {% endif %}>Front</option>
+                        <option value="environment" {% if gFaceMode=='rear' %} selected {% endif %}>Rear</option>
+                    </select>
+                </div>
+                <div class="col-sm-4 form-group">
+                    <label for="iCamPosition">Camera Position:</label>
+                    <select class="form-control" id="iCamPosition">
+                        <option value="1204" {% if gCamPosition=='1204' %} selected {% endif %}>12oclk-0.4m</option>
+                        <option value="1104" {% if gCamPosition=='1104' %} selected {% endif %}>11o'clk-0.4m</option>
+                        <option value="0904" {% if gCamPosition=='0904' %} selected {% endif %}>09o'clk-0.4m</option>
+                        <option value="0704" {% if gCamPosition=='0704' %} selected {% endif %}>07o'clk-0.4m</option>
+                        <option value="1214" {% if gCamPosition=='1214' %} selected {% endif %}>12o'clk-1.4m</option>
+                        <option value="1114" {% if gCamPosition=='1114' %} selected {% endif %}>11o'clk-1.4m</option>
+                        <option value="0914" {% if gCamPosition=='0914' %} selected {% endif %}>09o'clk-1.4m</option>
+                        <option value="0714" {% if gCamPosition=='0714' %} selected {% endif %}>07o'clk-1.4m</option>
+                    </select>
+                </div>
+
+                <div>
+                    <video id="gum" playsinline autoplay muted></video>
+                </div>
+                <!-- <div>
+                        <video id="recorded" playsinline loop></video>
+                    </div> -->
+                <div>
+                    <button id="start">Start camera</button>
+                    <button id="record" style="width: 150px;" disabled>Start Recording</button>
+                    <!-- <button id="play" disabled>Play</button>-->
+                    <button id="download" disabled>Download</button>
+                </div>
+
+                <div class="select">
+                    <label for="audioSource">Audio source: </label><select id="audioSource"></select>
+                </div>
+
+                <div class="select">
+                    <label for="videoSource">Video source: </label><select id="videoSource"></select>
+                </div>
+
+                <div>
+                    Recording format: <select id="codecPreferences" disabled></select>
+                </div>
+                <div>
+                    <h4>Media Stream Constraints options</h4>
+                    <p>Echo cancellation: <input type="checkbox" id="echoCancellation" checked></p>
+                </div>
+
+                <div>
+                    <span id="errorMsg"></span>
+                </div>
+
+                <input type="hidden" id="iExType" value="" />
+                <input type="hidden" id="iSubject" value="" />
+                <input type="hidden" id="iSubjectAction" value="" />
+
+
+            </div>
+
+            <div class="col-sm-2 sidenav">
+                <div class="well">
+                    <p>Interested in this AD space? Contact .....</p>
+                </div>
+                <div class="well">
+                    <p>Interested in this AD space? Contact .....</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="container-fluid text-center">
+        <p>Republic Polytechnic IGO Project</p>
+    </footer>
+
+
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script>
+    'use strict';
+
+    /* globals MediaRecorder */
+    let mediaRecorder;
+    let recordedBlobs;
+
+    // [START gae_flex_websockets_js]
+    /* If the main page is served via https, the WebSocket must be served via
+           "wss" (WebSocket Secure) */
+    var scheme = window.location.protocol == "https:" ? 'wss://' : 'ws://';
+    var webSocketUri = scheme
+        + window.location.hostname
+        + (location.port ? ':' + location.port : '')
+        + '/chat';
+
+    /* this is the web sockets server, for easy testing, we will just hard-code the actual URL here first */
+    webSocketUri = "wss://united-idea-311914.et.r.appspot.com/chat";
+
+
+    /* Establish the WebSocket connection and register event handlers. */
+    var websocket = new WebSocket(webSocketUri);
+
+    $(function () {
+
+        function log(text) {
+            document.getElementById("server_status").innerHTML = text;
+        }
+
+        websocket.onopen = function () {
+            log('Connected');
+        };
+
+        websocket.onclose = function () {
+            log('Closed');
+        };
+
+        websocket.onmessage = function (e) {
+            var d = new Date().toLocaleString('en-SG', {
+                weekday: 'short', // long, short, narrow
+                day: '2-digit', // numeric, 2-digit
+                year: 'numeric', // numeric, 2-digit
+                month: 'short', // numeric, 2-digit, long, short, narrow
+                hour: '2-digit', // numeric, 2-digit
+                minute: '2-digit', // numeric, 2-digit
+                second: '2-digit', // numeric, 2-digit
+            });
+            log('Message received ' + d);
+            var serverOutput = e.data.substring(0, 200).replace(/,/g, ", ");
+            //document.getElementById("msg_status").innerHTML = serverOutput + "..... ";
+            // biowee to add code here to get MASTER's value
+            console.log("serverOutput...... " + serverOutput);
+            if (serverOutput == "STARTED... Cick to STOP") {
+
+                document.getElementById("img_container_msg").innerHTML = "Start taking video...";
+                document.getElementById("start").click();
+            }
+            else if (serverOutput.startsWith("START-")) {
+                var varExTypeSubjectAction = serverOutput.slice("START-".length);
+                var varExTypeSubjectActionSplitted = varExTypeSubjectAction.split('-');
+                document.getElementById("iExType").value = varExTypeSubjectActionSplitted[0];
+                document.getElementById("iSubject").value = varExTypeSubjectActionSplitted[1];
+                document.getElementById("iSubjectAction").value = varExTypeSubjectActionSplitted[2];
+                document.getElementById("img_container_msg").innerHTML = "STOP taking video...";
+                console.log("value of button" + document.getElementById("record").innerHTML);
+                if (document.getElementById("record").innerHTML == 'Stop Recording') {
+                    console.log("to stop recording......");
+                    mediaRecorder.requestData();
+                    document.getElementById("record").click();
+
+                    (function downloadBlob(i) {
+                        setTimeout(() => {
+                            if (recordedBlobs.length > 0) {
+                                document.getElementById("download").click();
+                            } else if (i > 0) {
+                                console.log("5 secs passed .....");
+                                i--;
+                                downloadBlob(i);
+                            }
+                        }, 5000);
+                    })(20);
+                }
+                else {
+                    console.log("nothing happens...... :(");
+                }
+            }
+            else {
+                document.getElementById("img_container_msg").innerHTML = "Something went wrong";
+            }
+        };
+
+        websocket.onerror = function (e) {
+            log('Error (see console)');
+            console.log(e);
+        };
+
+    });
+    // [END gae_flex_websockets_js]
+
+
+    // https://yari-demos.prod.mdn.mozit.cloud/en-US/docs/Web/API/MediaStream_Recording_API/Recording_a_media_element/_sample_.Example.html
+
+
+    const codecPreferences = document.querySelector('#codecPreferences');
+
+    const errorMsgElement = document.querySelector('span#errorMsg');
+    const recordedVideo = document.querySelector('video#recorded');
+    const recordButton = document.querySelector('button#record');
+    recordButton.addEventListener('click', () => {
+        if (recordButton.textContent === 'Start Recording') {
+            startRecording();
+        } else {
+            stopRecording();
+            recordButton.textContent = 'Start Recording';
+            //playButton.disabled = false;
+            downloadButton.disabled = false;
+            codecPreferences.disabled = false;
+        }
+    });
+
+    const downloadButton = document.querySelector('button#download');
+    downloadButton.addEventListener('click', () => {
+        console.log('in download');
+        const blob = new Blob(recordedBlobs, { type: 'video/mp4' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+
+        // filename
+        var varDelimiter = '_';
+        var varExType = document.querySelector('#iExType').value;
+        var varSubject = document.querySelector('#iSubject').value;
+        var varCamPosition = document.querySelector('#iCamPosition').value; // from minion
+        var varSubjectAction = document.querySelector('#iSubjectAction').value;
+        var varFileName = varExType.concat(varDelimiter, varSubject, varDelimiter, varCamPosition, varDelimiter, varSubjectAction, '.mp4');
+        console.log('varFileName is ' + varFileName);
+        a.download = varFileName;
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+    });
+
+
+
+    function handleDataAvailable(event) {
+        console.log('handleDataAvailable', event);
+        if (event.data && event.data.size > 0) {
+            recordedBlobs.push(event.data);
+        }
+    }
+
+    function getSupportedMimeTypes() {
+        const possibleTypes = [
+            'video/mp4;codecs=h264,aac',
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm;codecs=h264,opus',
+        ];
+        return possibleTypes.filter(mimeType => {
+            if (/iPhone/i.test(navigator.userAgent)) {
+                if (mimeType == 'video/mp4;codecs=h264,aac' ||
+                    mimeType == 'video/webm;codecs=h264,opus') {
+                    return true;
+                    // this is a hack as isTypeSupported not
+                    // supported on Safari
+                }
+            } else {
+                return MediaRecorder.isTypeSupported(mimeType);
+            }
+        });
+    }
+
+    function startRecording() {
+
+
+        /* START to enumerate devices */
+        // if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        //     console.log("enumerateDevices() not supported.");
+        //     return;
+        // }
+
+        // // List cameras and microphones.
+
+        // navigator.mediaDevices.enumerateDevices()
+        //     .then(function (devices) {
+        //         devices.forEach(function (device) {
+        //             console.log(device.kind + ": " + device.label +
+        //                 " id = " + device.deviceId);
+        //         });
+        //     })
+        //     .catch(function (err) {
+        //         console.log(err.name + ": " + err.message);
+        //     });
+        /* END to enumerate devices */
+
+
+        recordedBlobs = [];
+        const mimeType = codecPreferences.options[codecPreferences.selectedIndex].value;
+        const options = { mimeType };
+
+        try {
+            mediaRecorder = new MediaRecorder(window.stream, options);
+        } catch (e) {
+            console.error('Exception while creating MediaRecorder:', e);
+            errorMsgElement.innerHTML = `Exception while creating MediaRecorder: ${JSON.stringify(e)}`;
+            return;
+        }
+
+        console.log('Created MediaRecorder', mediaRecorder, 'with options', options);
+        recordButton.textContent = 'Stop Recording';
+        //playButton.disabled = true;
+        downloadButton.disabled = true;
+        codecPreferences.disabled = true;
+        mediaRecorder.onstop = (event) => {
+            console.log('Recorder stopped: ', event);
+            console.log('Recorded Blobs: ', recordedBlobs);
+        };
+        mediaRecorder.ondataavailable = handleDataAvailable;
+        mediaRecorder.start();
+        console.log('MediaRecorder started', mediaRecorder);
+    }
+
+    function stopRecording() {
+        mediaRecorder.stop();
+
+    }
+
+    function handleSuccess(stream) {
+        console.log('in handleSuccess')
+        recordButton.disabled = false;
+        console.log('getUserMedia() got stream:', stream);
+        window.stream = stream;
+
+        const gumVideo = document.querySelector('video#gum');
+        gumVideo.srcObject = stream;
+
+        getSupportedMimeTypes().forEach(mimeType => {
+            const option = document.createElement('option');
+            option.value = mimeType;
+            option.innerText = option.value;
+            codecPreferences.appendChild(option);
+        });
+        codecPreferences.disabled = false;
+    }
+
+    async function init(constraints) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints).then(gotStream).catch(handleError);
+            handleSuccess(stream);
+            document.getElementById("record").click();
+
+        } catch (e) {
+            console.error('navigator.getUserMedia error:', e);
+            errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+        }
+    }
+
+
+    /* Reference: https://www.html5rocks.com/en/tutorials/getusermedia/intro/ */
+    const videoElement = document.querySelector("video");
+    const audioSelect = document.querySelector("select#audioSource");
+    const videoSelect = document.querySelector("select#videoSource");
+
+    navigator.mediaDevices
+        .enumerateDevices()
+        .then(gotDevices)
+        .then(getStream)
+        .catch(handleError);
+
+    audioSelect.onchange = getStream;
+    videoSelect.onchange = getStream;
+
+
+
+    function gotDevices(deviceInfos) {
+        for (let i = 0; i !== deviceInfos.length; ++i) {
+            const deviceInfo = deviceInfos[i];
+            const option = document.createElement("option");
+            option.value = deviceInfo.deviceId;
+            if (deviceInfo.kind === "audioinput") {
+                option.text =
+                    deviceInfo.label || "microphone " + (audioSelect.length + 1);
+                audioSelect.appendChild(option);
+            } else if (deviceInfo.kind === "videoinput") {
+                option.text = deviceInfo.label || "camera " + (videoSelect.length + 1);
+                videoSelect.appendChild(option);
+            } else {
+                console.log("Found another kind of device: ", deviceInfo);
+            }
+        }
+    }
+    function getStream() {
+        if (window.stream) {
+            window.stream.getTracks().forEach(function (track) {
+                track.stop();
+            });
+        }
+
+        const constraints = {
+            audio: {
+                deviceId: { exact: audioSelect.value },
+            },
+            video: {
+                deviceId: { exact: videoSelect.value },
+            },
+        };
+
+        navigator.mediaDevices
+            .getUserMedia(constraints)
+            .then(gotStream)
+            .catch(handleError);
+    }
+    function gotStream(stream) {
+        window.stream = stream; // make stream available to console
+        videoElement.srcObject = stream;
+    }
+
+    function handleError(error) {
+        console.error("Error: ", error);
+    }    
+
+    document.querySelector('button#start').addEventListener('click', async () => {
+        document.querySelector('button#start').disabled = true;
+        const hasEchoCancellation = document.querySelector('#echoCancellation').checked;
+        const facing_mode = document.querySelector('#iFaceMode').value;
+
+        const constraints = {
+            audio: {
+                echoCancellation: { exact: hasEchoCancellation },
+                deviceId: { exact: audioSelect.value }
+            },
+            video: {
+                facingMode: {
+                    exact: facing_mode
+                },
+                width: {
+                    min: 1280,
+                },
+                height: {
+                    min: 720,
+                },
+                deviceId: { exact: videoSelect.value },
+            }
+        };
+        console.log('Using media constraints:', constraints);
+        await init(constraints);
+    });
+
+
+
+</script>
+
+</html>

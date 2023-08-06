@@ -1,0 +1,287 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Contact Us!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/static/img/ica_icon_circle.png" sizes="192x192">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/ica.css">
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        p {
+            color: #666;
+        }
+
+        h2 {
+            font-size: 2em;
+            color: #e74c3c;
+        }
+
+        .centered {
+            margin: 0 auto;
+            padding: 0 1em;
+        }
+
+        @media screen and (min-width: 52em) {
+            .centered {
+                max-width: 52em;
+            }
+        }
+
+        /*--------------------------------------------------------------
+Header styles minus menu
+--------------------------------------------------------------*/
+
+        .masthead {
+            background: #e74c3c;
+            box-shadow: 3px 3px 8px hsl(0, 0%, 70%);
+        }
+
+        .site-title {
+            margin: 0 0 1em;
+            padding: 1em 0;
+            font-size: 2em;
+            font-weight: 300;
+            text-align: center;
+            color: black;
+        }
+
+        @media screen and (min-width: 44.44em) {
+            .site-title {
+                font-size: 2em;
+            }
+        }
+
+        @media screen and (min-width: 50em) {
+            .site-title {
+                font-size: 2.5em;
+            }
+        }
+
+        .site-title a {
+            color: hsl(5, 45%, 95%);
+            text-decoration: none;
+        }
+
+        .site-title a:hover {
+            text-decoration: underline;
+        }
+
+        /* Card Based Layout - Base styles */
+        body {
+            background: #ecf0f1;
+            line-height: 1.4;
+        }
+
+        .site-title {
+            color: white;
+        }
+
+        .card {
+            background: white;
+            margin-bottom: 2em;
+        }
+
+        .card a {
+            color: black;
+            text-decoration: none;
+        }
+
+        .card a:hover {
+            box-shadow: 3px 3px 8px hsl(0, 0%, 70%);
+        }
+
+        .card-content {
+            padding: 1.4em;
+        }
+
+        .card-content h2 {
+            margin-top: 0;
+            margin-bottom: .5em;
+            font-weight: normal;
+        }
+
+        .card-content p {
+            font-size: 95%;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+        }
+
+        /* Flexbox styles */
+        @media screen and (min-width: 40em) {
+            .cards {
+                margin-top: -1em;
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .card {
+                margin-bottom: 1em;
+                display: flex;
+                flex: 0 1 calc(50% - 0.5em);
+                /* width: calc(50% - 1em); */
+            }
+        }
+
+        /* mq 40em*/
+
+        @media screen and (min-width: 60em) {
+            .cards {
+                margin-top: inherit;
+            }
+
+            .card {
+                margin-bottom: 2em;
+                display: flex;
+                flex: 0 1 calc(33% - 0.5em);
+                /* width: calc(33% - 1em); */
+            }
+        }
+
+        /* mq 60em*/
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Intelligent Calisthenics Assistant (ICA)</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li class="active"><a href="/contact">Contact</a></li>
+                    {% if session['sessID'] %}
+                    <li><a href="/record">Record</a></li>
+                    {% endif %}
+                    <li><a href="/member">Member</a></li>
+                    <li><a href="/push_up">Push Up</a></li>
+                    <li><a href="/sit_up">Sit Up</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    {% if not session['sessID'] %}
+                    <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+                    {% else %}
+                    <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span>Logout</a></li>
+                    <li><a href="/profile"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    </div>
+    <header class="masthead clear">
+        <div class="centered">
+
+            <div class="site-branding">
+                <h1 class="site-title">Who is Strike Academy?</h1>
+            </div>
+            <!-- .site-title -->
+        </div>
+        <!-- .centered -->
+    </header>
+    <!-- .masthead -->
+
+    <main class="main-area">
+
+        <div class="centered">
+
+            <section class="cards">
+
+                <article class="card">
+                    <a href="#">
+                    
+                        <div class="card-content">
+                            <h2>Vision</h2>
+                            <p>To be a world class premier academy that produces not only bowling champions but champions for life</p>
+                        </div>
+                        
+                    </a>
+                </article>
+                <!-- .card -->
+
+                <article class="card">
+                    <a href="#">
+                        
+                        <div class="card-content">
+                            <h2>STRIKE</h2>
+                            <p>We believe sports provide a great platform to develop desirable character tratis. STRIKE's progressive pedagogy harness the experiences of parens with succesful children, coaches with provide trcack records, innovation proivded by evoling technolgoeis, and consultations with domain experts.</p>
+
+                        </div>
+                        <!-- .card-content -->
+                    </a>
+                </article>
+                <!-- .card -->
+
+                <article class="card">
+                    <a href="#">
+                        
+                        <div class="card-content">
+                            <h2>Stakeholders</h2>
+                            <p>National Sports Associations</p>
+                            <p>National Governing Bodies</p>
+                            <p>Governing Education Agencies</p>
+                            <p>Operators/Serivce Providers/Sponsors</p>
+                            <p>Coaches</p>
+                            <p>Parents</p>
+                            <p>Bowlers</p>
+                            
+                        </div>
+                    </a>
+                </article>
+                <!-- .card -->
+
+                <article class="card">
+                    <a href="#">
+                        
+                        <div class="card-content">
+                            <h2>Mission</h2>
+                            <p>To impart life skills to the young so they may realize their maximum potential through the pursuit of bowling excellence in a fun-loving environment</p>
+
+                            
+                        </div>
+                    </a>
+                </article>
+                <!-- .card -->
+
+                <article class="card">
+                    <a href="#">
+                        
+                        <div class="card-content">
+                            <h2>Contact us!</h2>
+                            <p><b>Address</b>: 131 RIFLE RANGE ROAD, #04-01 SINGAPORE 588046</p>
+                            <p><b>PHONE</b>: (65) 9645 9065</p>
+                            <p><b>EMAIL</b>: admin@strikacademy.com</p>
+                            For programme registration, please call or email THE STRIKE ADMIN
+
+                            
+                        </div>
+                    </a>
+                </article>
+                <!-- .card -->
+                
+            </section>
+            <!-- .cards -->
+
+            
+        </div>
+        <!-- .centered -->
+
+    </main>
+</body>

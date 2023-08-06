@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+    <title>Generate Chart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Exercise: {{ exercise }}</h1>
+    <p>Good Count: {{ good_count }}</p>
+    <p>Bad Count: {{ bad_count }}</p>
+    <p>Positive Result: {{ poseresult }}</p>
+    <h4>Chart:</h4>
+    <img src="data:image/png;base64,{{ image_base64 }}" alt="Generated Chart" width="1120" height="630">
+    <canvas id="chart"></canvas>
+    
+    <script>
+        // Retrieve exercise data from Flask template variables
+        var exercise = "{{ exercise }}";
+        var goodCount = "{{ good_count }}";
+        var badCount = "{{ bad_count }}";
+        var poseres = "{{ poseresult }}";
+
+        // Create a pie chart
+        var ctx = document.getElementById('chart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Good Count', 'Bad Count'],
+                datasets: [{
+                    data: [goodCount, badCount],
+                    backgroundColor: ['green', 'red'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+    </script>
+</body>
+</html>

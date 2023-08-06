@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ICA Prototype</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://pagecdn.io/lib/mathjs/11.0.1/math.min.js"></script>
+  <script src="static/config.js"></script>
+
+  <style>
+    /* Remove the navbar's default margin-bottom and rounded borders */ 
+    .navbar {
+      margin-bottom: 0;
+      border-radius: 0;
+    }
+    
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 450px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      padding-top: 20px;
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+    
+    /* Set black background color, white text and some padding */
+    footer {
+      background-color: #555;
+      color: white;
+      padding: 15px;
+    }
+    
+    /* On small screens, set height to 'auto' for sidenav and grid */
+    @media screen and (max-width: 767px) {
+      .sidenav {
+        height: auto;
+        padding: 15px;
+      }
+      .row.content {height:auto;} 
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>                        
+        </button>
+        <a class="navbar-brand" href="#">Intelligent Calisthenics Assistant (ICA) </a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if session['sessID'] %}
+            <li><a href="/record">Record</a></li>
+            {% endif %}
+            <li><a href="/member">Member</a></li>
+            <li><a href="/push_up">Push Up</a></li>
+            <li class="active"><a href="/sit_up">Sit Up</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            {% if not session['sessID'] %}
+            <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+            {% else %}
+            <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span>Logout</a></li>
+            <li><a href="/profile"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid text-center">    
+    <div class="row content">
+      <div class="col-sm-2 sidenav">
+        <p><a href="#">Project Team Members</a></p>
+      </div>
+      <div class="col-sm-8 text-left"> 
+        <br>
+        
+        <canvas class="output_canvas_1" width="320px" height="180px" style="width:49%; height:49%"></canvas>
+        <canvas class="output_canvas_2" id="output_canvas_2" width="320px" height="180px" style="width:49%; height:49%"></canvas>
+        <input type="checkbox" id="input_type"> Camera?&nbsp&nbsp&nbsp
+        Video Position <select class="cam_pos" id="cam_pos"> 
+          <option value="9" selected>9 o'clock</option>
+          <option value="11">11</option>
+          <option value="7">7</option>
+        </select>
+
+        <input type="file" id="input_file" accept="video/*"/><br> 
+        <video class="input_file" width="320px" height="180px" controls></video>
+        <video class="input_camera" width="320px" height="180px"></video>
+
+        <br>(P) of Correct Pose&nbsp&nbsp&nbsp<span id="UndisposedMem">Undisposed Mem: 0 MB</span>
+        <input type="textarea" style="width:100%" id="poseResult" name="poseResult" readonly><br>
+        <br>Left Wrist (x)&nbsp<input type="textarea" style="width:20%" id="leftWrist" name="leftWrist" readonly>
+        &nbsp&nbsp&nbspRight Wrist (x)&nbsp</label><input type="textarea" style="width:20%" id="rightWrist" name="rightWrist" readonly>
+        
+        <br><br><button id="toggleSend" onclick="toggleSend()">Start Predict</button>
+        Sampling Rate <input type="number" id="samplingRate" min="20" max="30" value="24">
+        Predict By <select class="predict_by" id="predict_by"> 
+          <option value="CNN" selected>CNN</option>
+          <option value="angles">Angles</option>
+        </select>
+        <br><br>
+
+        <canvas id="perfChart" style="max-width:100%; max-height:30%"></canvas>
+
+      </div>
+      <div class="col-sm-2 sidenav">
+        <div class="well">
+          <p>Interested in this AD space? Contact .....</p>
+        </div>
+        <div class="well">
+          <p>Interested in this AD space? Contact .....</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="container-fluid text-center">
+    <p>Republic Polytechnic IGO Project</p>
+  </footer>
+
+  <p id="pose_results" style="display:none;"></p>
+</body>
+
+<script>
+
+  // By default, push_ups and 9 oc positions
+  var exercise = exercises.find(exercise => exercise.type === "sit_up" &&
+    exercise.cam_pos === "9oc");
+ 
+  var poseModel_1,  poseModel_2, poseModel_3, flowModel, neg_emb_1, pos_emb_1, neg_emb_2, pos_emb_2;
+  var exCount = 0, goodCount = 0, badCount = 0, eh_gap_at_rest = 0;
+    perfChart = null, currPoseModel = "9", userAdvice = "";
+
+  var prevAPF = {angle:0, pose:"", flow:""};
+  var last10PosePredict = [], flowClassifyResults = "";
+  var cam_pos = document.getElementById('cam_pos');
+  cam_pos.addEventListener('change', switchPoseModel);
+
+  (async function () {
+    poseModel_1 = await tf.loadLayersModel("static/models/situp-pose_2A_9oc/model.json");
+    poseModel_1.summary();
+    poseModel_2 = await tf.loadLayersModel("static/models/situp-pose_2B1_9oc/model.json");
+    poseModel_2.summary();
+    poseModel_3 = await tf.loadLayersModel("static/models/situp-pose_2B2_9oc/model.json");
+    poseModel_3.summary();
+    currPoseModel = "9";
+    flowModel = await tf.loadGraphModel("static/models/situp-flow/model.json");
+  })();
+
+  async function classifyPose_1(wrist_ear_ED) {
+    let imagePoseOnly = document.getElementsByClassName('output_canvas_1')[0];
+
+    let t_wrist_ear_ED = tf.tensor1d([wrist_ear_ED]).expandDims();
+    let t_imagePoseOnly = tf.browser.fromPixels(imagePoseOnly)
+      .resizeNearestNeighbor([180, 320]).toFloat().div(tf.scalar(255)).reverse(2).expandDims();
+
+    let poseResults_1 = [];
+    poseResults_1 = await poseModel_1.predict([t_imagePoseOnly, t_wrist_ear_ED]).data();
+    return([poseResults_1]);
+  }
+
+  async function classifyPose_3(elbow_knee_ED) {
+    let imagePoseOnly = document.getElementsByClassName('output_canvas_1')[0];
+
+    let t_elbow_knee_ED = tf.tensor1d([elbow_knee_ED]).expandDims();
+    let t_imagePoseOnly = tf.browser.fromPixels(imagePoseOnly)
+      .resizeNearestNeighbor([180, 320]).toFloat().div(tf.scalar(255)).reverse(2).expandDims();
+
+    let poseResults_3 = [];
+    poseResults_3 = await poseModel_3.predict([t_imagePoseOnly, t_elbow_knee_ED]).data();
+    return([poseResults_3]);
+  }
+
+
+  async function classifyPose_2() {
+    let imagePoseOnly = document.getElementsByClassName('output_canvas_1')[0];
+
+    let imageOrig = null;
+    const inputType = document.querySelector('#input_type'); 
+    const videoElementFile = document.getElementsByClassName('input_file')[0];
+    const videoElementCamera = document.getElementsByClassName('input_camera')[0];
+    
+    if (inputType.checked)
+      imageOrig =  videoElementCamera;
+    else
+      imageOrig = videoElementFile;
+
+    let t_imagePoseOnly = tf.browser.fromPixels(imagePoseOnly)
+      .resizeNearestNeighbor([180, 320]).toFloat().div(tf.scalar(255)).expandDims();
+    let t_imageOrig = tf.browser.fromPixels(imageOrig)
+      .resizeNearestNeighbor([180, 320]).toFloat().div(tf.scalar(255)).reverse(2).expandDims();
+
+    let t_array = tf.concat([t_imageOrig, t_imagePoseOnly], 3);
+    let poseResults_2 = [];
+    poseResults_2 = await poseModel_2.predict(t_array).data();
+
+    let avgNegSim_2 = 0, avgPosSim_2 = 0;
+    avgNegSim_2 = avgCosineSim(poseResults_2, neg_emb_2);
+    avgPosSim_2 = avgCosineSim(poseResults_2, pos_emb_2);
+
+    console.log ("AVE (Model II) +/- " + avgPosSim_2 + " " + avgNegSim_2);
+
+    return ([avgPosSim_2, avgNegSim_2]);
+  }
+
+  async function classifyFlow() {
+    let imageFlowOnly = document.getElementsByClassName('output_canvas_2')[0];
+    let t_imageFlowOnly = tf.browser.fromPixels(imageFlowOnly)
+      .resizeNearestNeighbor([180, 320]).toFloat().div(tf.scalar(255)).expandDims();
+    let flowResult = await flowModel.predict(t_imageFlowOnly).data();
+    let max=-1, max_i, movtDir;
+
+    flowResult.forEach((element, index) => { 
+      if (max < element) {
+        max = element;   
+        max_i = index; 
+      }
+    });
+
+    if (max_i == 0)
+      movtDir = "Down";
+    else if (max_i == 1)
+      movtDir = "No Movement";
+    else
+      movtDir = "Up";
+
+    return movtDir;
+  }
+
+  function toggleSend() {
+    var toggleButton = document.getElementById("toggleSend");
+    if (toggleButton.innerHTML == "Start Predict") {
+      toggleButton.innerHTML = "Stop Predict";
+    } else {
+      toggleButton.innerHTML = "Start Predict";
+    }
+  }
+
+  // load the correct model based on cam position
+  function switchPoseModel () {
+    if (this.value != currPoseModel) {
+      (async function () {
+        let newModelToLoad = "static/models/situp-pose_2A_".concat(
+        this.value).concat("oc/model.json");
+        poseModel_1 = await tf.loadLayersModel(newModelToLoad);
+        newModelToLoad = "static/models/situp-pose_2B1_".concat(
+        this.value).concat("oc/model.json");
+        poseModel_2 = await tf.loadLayersModel(newModelToLoad);
+        newModelToLoad = "static/models/situp-pose_2B2_".concat(
+        this.value).concat("oc/model.json");
+        poseModel_3 = await tf.loadLayersModel(newModelToLoad);
+        currPoseModel = this.value;
+      })();
+      exercise = exercises.find(exercise => exercise.type === "sit_up" &&
+      exercise.cam_pos === this.value.concat("oc"));
+    }
+  }
+
+  function cosineSim(A, B) {
+    let dotProduct = 0, mA = 0, mB = 0;
+
+    for (let i = 0; i < A.length; i++) {
+        dotProduct += (A[i] * B[i]);
+        mA += (A[i]*A[i]);
+        mB += (B[i]*B[i]);
+    }
+    mA = Math.sqrt(mA);
+    mB = Math.sqrt(mB);
+    return (dotProduct)/((mA)*(mB));
+  }
+
+  function avgCosineSim(A, B) {
+    let totalCosSim = 0;
+    for (let i = 0; i < B.length; i++) {
+      totalCosSim += cosineSim(A, B[i]);
+    }
+    return (totalCosSim/B.length);
+  }
+</script>
+
+<script async src="https://docs.opencv.org/4.5.2/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+<script type="text/javascript">
+  var cap, frame2, prvs, hsv0, hsv1, hsv2, hsvVec, frame2, flow, flowVec, next,
+      mag, ang, rgb, OpenCvReady = false;
+
+  function resetOpenCv(videoElement) {
+      cap = new cv.VideoCapture(videoElement);
+      // take first frame of the video
+      frame1 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC4);
+      cap.read(frame1);
+
+      prvs = new cv.Mat();
+      cv.cvtColor(frame1, prvs, cv.COLOR_RGBA2GRAY);
+      frame1.delete();
+      hsv = new cv.Mat();
+      hsv0 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      hsv1 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1, new cv.Scalar(255));
+      hsv2 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      hsvVec = new cv.MatVector();
+      hsvVec.push_back(hsv0); hsvVec.push_back(hsv1); hsvVec.push_back(hsv2);
+
+      frame2 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC4);
+      next = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      flow = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC2);
+      flowVec = new cv.MatVector();
+      mag = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC1);
+      ang = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC1);
+      rgb = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC3);
+
+      OpenCvReady = true;
+  }
+  function onOpenCvReady() {
+    cv['onRuntimeInitialized'] = () => {
+      let videoElementForDOF = document.getElementsByClassName('input_file')[0];
+      resetOpenCv(videoElementForDOF);
+    }
+  }
+  function drawFlow() {
+    try {
+        let begin = performance.now();
+        if (OpenCvReady) {
+        cap.read(frame2);
+        cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY);
+        cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+        cv.split(flow, flowVec);
+        let u = flowVec.get(0);
+        let v = flowVec.get(1);
+        cv.cartToPolar(u, v, mag, ang);
+        u.delete(); v.delete();
+        ang.convertTo(hsv0, cv.CV_8UC1, 180/Math.PI/2);
+        cv.normalize(mag, hsv2, 0, 255, cv.NORM_MINMAX, cv.CV_8UC1);
+        cv.merge(hsvVec, hsv);
+        cv.cvtColor(hsv, rgb, cv.COLOR_HSV2RGB);
+        cv.imshow('output_canvas_2', rgb);
+        next.copyTo(prvs);
+        }
+
+        // schedule the next one.
+        // let delay = 1000/parseFloat(document.getElementById('samplingRate').value) - (performance.now() - begin);
+        // setTimeout(drawFlow, delay);
+    } catch (err) {
+        console.log(err);
+    }
+  }
+  // setTimeout is to schedule the next function call to draw the flow
+  // commented out to call drawFlow everytime when onResults() is invoked
+  // i.e. draw in realtime
+  // setTimeout(drawFlow, 0);
+</script>
+
+<script type="module">
+  const inputType = document.querySelector('#input_type');
+  const videoElementFile = document.getElementsByClassName('input_file')[0];
+  const videoElementCamera = document.getElementsByClassName('input_camera')[0];
+  const canvasElement = document.getElementsByClassName('output_canvas_1')[0];
+  // For mirror image, uncomment the following
+  // canvasElement.style.transform = "scale(-1, 1)";
+  const canvasCtx = canvasElement.getContext('2d');
+  var lastSent = performance.now();
+
+  // This is to calculate angles spread horizontally, e.g. Shoulder-Hip-Knee
+  function calculateAngle_1 (a, b, c) {
+    let arctan_1 = 0, arctan_2 = 0, angle_1 = 0, angle_2 = 0,
+      angle_between_1_2 = 0;
+
+    arctan_1 = Math.atan2(a[1] - b[1], a[0] - b[0]);
+    arctan_2 = Math.atan2(c[1] - b[1], c[0] - b[0]);
+    angle_1 = arctan_1 * 180/Math.PI;
+    angle_2 = arctan_2 * 180/Math.PI;
+
+    // For easy tracking, convert all to +ive angles first
+    if (angle_1 < 0)
+      angle_1 = 360 - Math.abs(angle_1);
+    if (angle_2 < 0)
+      angle_2 = 360 - Math.abs(angle_2);
+
+    if (a[1] >= b[1])
+      angle_between_1_2 = angle_2 - angle_1;
+    if (a[1] < b[1])
+      angle_between_1_2 = angle_2 + (360 - angle_1);
+    
+    return angle_between_1_2;
+  }
+
+  // This is to calculate angles spread vertically, e.g. Shoulder-Elbow-Wrist
+  function calculateAngle_2 (a, b, c, view = "Right") {
+    let arctan_1 = 0, arctan_2 = 0, angle_1 = 0, angle_2 = 0,
+      angle_between_1_2 = 0;
+
+    arctan_1 = Math.atan2(a[1] - b[1], a[0] - b[0]);
+    arctan_2 = Math.atan2(c[1] - b[1], c[0] - b[0]);
+    angle_1 = arctan_1 * 180/Math.PI;
+    angle_2 = arctan_2 * 180/Math.PI;
+
+    // For easy tracking, convert all to +ive angles first
+    if (angle_1 < 0)
+      angle_1 = 360 - Math.abs(angle_1);
+    if (angle_2 < 0)
+      angle_2 = 360 - Math.abs(angle_2);
+
+    if (view == 'Left')
+      angle_between_1_2 = angle_2 - angle_1;
+    else if (view == 'Right') {
+      if (a[1] >= b[1])
+        angle_between_1_2 = 360 - (angle_2 - angle_1);
+      if (a[1] < b[1])
+        angle_between_1_2 = angle_1 - angle_2;
+    }
+
+    return angle_between_1_2;
+  }
+
+  function onResults(results) {
+    canvasCtx.save();
+    /* canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.fillStyle = "black";
+    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height); */
+    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+    
+    // The following three draw functions are replaced with customised logic
+    /* canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+    drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+                   {color: '#00FF00', lineWidth: 1});
+    drawLandmarks(canvasCtx, results.poseLandmarks,
+                  {color: '#FF0000', lineWidth: 0, radius: 1});
+     */
+    if (typeof results.poseLandmarks == "undefined") {
+      canvasCtx.fillStyle = "red";
+      canvasCtx.font = "16px Comic Sans";
+      canvasCtx.fillText("Oops! Please refresh page!", 5, 50);
+      return; // do nothing since no human form is present
+    }
+
+    drawFlow(); // Draw dense optical flow image
+
+    let idx_to_coordinates = [];
+
+    // Scale Z values to between 0 and 1
+    let min_z = 1, max_z = 0;
+    for (let i = 0; i < results.poseLandmarks.length; i++) {
+      if (results.poseLandmarks[i]['z'] <= min_z) {
+        min_z = results.poseLandmarks[i]['z'];
+      }
+    }
+    min_z = Math.abs(min_z);
+    for (let i = 0; i < results.poseLandmarks.length; i++) {
+      results.poseLandmarks[i]['z'] = results.poseLandmarks[i]['z'] + min_z;
+    }
+    for (let i = 0; i < results.poseLandmarks.length; i++) {
+      if (results.poseLandmarks[i]['z'] > max_z)
+        max_z = results.poseLandmarks[i]['z'];     
+    }
+    for (let i = 0; i < results.poseLandmarks.length; i++) {
+     results.poseLandmarks[i]['z'] = results.poseLandmarks[i]['z'] / max_z;     
+    }
+    // End of scale Z to between 0 and 1
+
+    // convert X, Y landmarks to pixel position
+    let x_px, y_px;
+    for (let i = 0; i < results.poseLandmarks.length; i++) {
+      x_px = Math.min(Math.floor(results.poseLandmarks[i]['x'] * canvasElement.width), 
+        canvasElement.width - 1);
+      y_px = Math.min(Math.floor(results.poseLandmarks[i]['y'] * canvasElement.height),
+        canvasElement.height- 1);
+      idx_to_coordinates.push({"x": x_px,"y": y_px, "z": results.poseLandmarks[i]['z']});
+    }
+    // End of convert X, Y landmarks to pixel position
+
+    // Determine if subject is facing right or left
+    // For sit-up, facing right will mean the head is on the left
+    // this is the left view. This is DIFFERENT from push-ups
+    // For push-ups, head on the right means facing right and it is the right view
+    let pose_of_interests_right_view = [11, 13, 15, 23, 25, 27],
+      pose_of_interests_left_view = [12, 14, 16, 24, 26, 28];
+    let pose_of_interests = [], pose_view = '';
+    if (idx_to_coordinates[0]['x'] > idx_to_coordinates[27]['x'] ||
+      idx_to_coordinates[0]['x'] > idx_to_coordinates[28]['x']) {
+        pose_of_interests = pose_of_interests_right_view;
+        pose_view = 'Right';
+    } else if (idx_to_coordinates[0]['x'] < idx_to_coordinates[27]['x'] ||
+      idx_to_coordinates[0]['x'] < idx_to_coordinates[28]['x']) {
+        pose_of_interests = pose_of_interests_left_view;
+        pose_view = 'Left';
+    }
+
+    // Draw the connections
+    let start_idx, end_idx, pt_1_x, pt_1_y, pt_2_x, pt_2_y, z_1, z_2, thickness;
+
+    for (let i = 0; i < POSE_CONNECTIONS.length; i++) {
+      start_idx = POSE_CONNECTIONS[i][0];
+      end_idx = POSE_CONNECTIONS[i][1];
+
+      if (pose_of_interests.includes(start_idx) && 
+        pose_of_interests.includes(end_idx)) {
+        pt_1_x = idx_to_coordinates[start_idx]['x'];
+        pt_1_y = idx_to_coordinates[start_idx]['y'];
+        pt_2_x = idx_to_coordinates[end_idx]['x'];
+        pt_2_y = idx_to_coordinates[end_idx]['y'];
+        z_1 =  idx_to_coordinates[start_idx]['z'];
+        z_2 =  idx_to_coordinates[end_idx]['z'];
+
+        if (z_1 < 0.5 || z_2 < 0.5)
+          thickness = 4;
+        else
+          thickness = 5;
+
+        canvasCtx.beginPath();
+        canvasCtx.lineWidth = thickness;
+        canvasCtx.moveTo(pt_1_x, pt_1_y);
+        canvasCtx.lineTo(pt_2_x, pt_2_y);
+        
+        if (start_idx <= 10)
+          canvasCtx.strokeStyle = 'rgb(0,255,0)';
+        else if (start_idx > 10 && start_idx < 23)
+          canvasCtx.strokeStyle = 'rgb(0,255,0)';
+        else if (start_idx > 23)
+          canvasCtx.strokeStyle = 'rgb(0,255,0)';
+        canvasCtx.stroke();
+      }
+    } // End draw connections
+
+    // Draw the pose points
+    let radius;
+    for (let i = 0; i < idx_to_coordinates.length; i++) {
+      radius = Math.round(idx_to_coordinates[i]['z'] * 2);
+      if (radius <= 1)
+        radius = 2;
+      canvasCtx.beginPath();
+      canvasCtx.arc(idx_to_coordinates[i]['x'], idx_to_coordinates[i]['y'], 
+        radius, 0, Math. PI * 2);
+      if (pose_of_interests.includes(i)) {
+        if (i <= 10) {
+          canvasCtx.fillStyle = 'rgb(255,0,0)';
+          canvasCtx.strokeStyle = 'rgb(255,0,0)';
+        } else if (i > 10 && i < 23) {
+          canvasCtx.fillStyle = 'rgb(255,0,0)';
+          canvasCtx.strokeStyle = 'rgb(255,0,0)';
+        } else if (i > 23) {
+          canvasCtx.fillStyle = 'rgb(255,0,0)';
+          canvasCtx.strokeStyle = 'rgb(255,0,0)';
+        }
+        canvasCtx.fill();
+        canvasCtx.stroke();
+        
+      }
+    }
+
+    // for demo out purpose, just print the left and right wrists
+    var left, right = "";
+    right = JSON.stringify(results.poseLandmarks[16]['x'].toPrecision(2)) + ' (' +
+      JSON.stringify(results.poseLandmarks[16]['visibility'].toPrecision(2)) + ')';
+    right = right.replace(/\"/g,"");
+    document.getElementById("rightWrist").value = right;
+    left = JSON.stringify(results.poseLandmarks[15]['x'].toPrecision(2)) + ' (' +
+      JSON.stringify(results.poseLandmarks[15]['visibility'].toPrecision(2)) + ')';
+    left = left.replace(/\"/g,"");
+    document.getElementById("leftWrist").value = left;
+    document.getElementById("pose_results").innerHTML = JSON.stringify(results.poseLandmarks);
+
+    let shoulder_pose_idx = 99, elbow_pose_idx = 99, wrist_pose_idx = 99, hip_pose_idx = 99,
+      knee_pose_idx = 99, ankle_pose_idx = 99, ear_pose_idx = 99;
+    if (pose_view == "Left") {
+      shoulder_pose_idx = 12;
+      elbow_pose_idx = 14;
+      wrist_pose_idx = 16;
+      hip_pose_idx = 24;
+      knee_pose_idx = 26;
+      ankle_pose_idx = 28;
+      ear_pose_idx = 8;
+    } else if (pose_view = "Right") {
+      shoulder_pose_idx = 11;
+      elbow_pose_idx = 13;
+      wrist_pose_idx = 15;
+      hip_pose_idx = 23;
+      knee_pose_idx = 25;
+      ankle_pose_idx = 27;
+      ear_pose_idx = 7;
+    }
+
+    let shoulder=[], elbow=[], wrist=[], ear=[], knee=[], hip=[], angle = 0;
+    shoulder = [idx_to_coordinates[shoulder_pose_idx]['x'], canvasElement.height - idx_to_coordinates[shoulder_pose_idx]['y'], 
+      idx_to_coordinates[shoulder_pose_idx]['z']];
+    elbow = [idx_to_coordinates[elbow_pose_idx]['x'], canvasElement.height - idx_to_coordinates[elbow_pose_idx]['y'],
+      idx_to_coordinates[elbow_pose_idx]['z']];
+    wrist = [idx_to_coordinates[wrist_pose_idx]['x'], canvasElement.height - idx_to_coordinates[wrist_pose_idx]['y'],
+      idx_to_coordinates[wrist_pose_idx]['z']];
+    ear = [idx_to_coordinates[ear_pose_idx]['x'], canvasElement.height - idx_to_coordinates[ear_pose_idx]['y'],
+      idx_to_coordinates[ear_pose_idx]['z']];
+    knee = [idx_to_coordinates[knee_pose_idx]['x'], canvasElement.height - idx_to_coordinates[knee_pose_idx]['y'],
+      idx_to_coordinates[knee_pose_idx]['z']];
+    hip = [idx_to_coordinates[hip_pose_idx]['x'], canvasElement.height - idx_to_coordinates[hip_pose_idx]['y'],
+      idx_to_coordinates[hip_pose_idx]['z']];
+
+    let wrist_ear_ED = math.norm([wrist[0]-ear[0], wrist[1]-ear[1], wrist[2]-ear[2]]),
+      elbow_knee_ED = math.norm([elbow[0]-knee[0], elbow[1]-knee[1], elbow[2]-knee[2]]);
+    
+    if (idx_to_coordinates[shoulder_pose_idx]['y'] / idx_to_coordinates[hip_pose_idx]['y'] > 0.9 &&
+      idx_to_coordinates[shoulder_pose_idx]['y'] / idx_to_coordinates[hip_pose_idx]['y'] < 1.1)
+      // keep 'calibrating' the widest point which is when elbows and hips are level
+      eh_gap_at_rest = Math.abs(elbow[0] - hip[0]);
+
+    if (pose_view == "Left")
+      angle = calculateAngle_2(shoulder, elbow, wrist, "Left");
+    else
+      angle = calculateAngle_2(shoulder, elbow, wrist);
+
+    // angle of shoulder, hip and knee, this a temp method of judging push-up
+    let angle_shk = 0;
+    if (pose_view == "Left") {
+      angle_shk = calculateAngle_1(knee, hip, shoulder);
+    } else {
+      angle_shk = calculateAngle_1(shoulder, hip, knee);
+    }
+
+    let ankle = [], angle_hka = 0;
+    ankle = [idx_to_coordinates[ankle_pose_idx]['x'], canvasElement.height - idx_to_coordinates[ankle_pose_idx]['y']];
+    if (pose_view == "Left")
+      angle_hka = calculateAngle_1(ankle, knee, hip);
+    else
+      angle_hka = calculateAngle_1(hip, knee, ankle);
+
+    // Predict according to the sampling rate
+    var timeInterval = 1000 / parseFloat(document.getElementById('samplingRate').value);
+    if (document.getElementById('toggleSend').innerHTML == "Stop Predict") {
+      if (performance.now() - lastSent >= timeInterval) {
+        tf.tidy (() => {
+          let pose1Predict = classifyPose_1(wrist_ear_ED),
+            pose3Predict = classifyPose_3(elbow_knee_ED),
+            flowPredict = classifyFlow();
+
+          /* Promise.all([pose1Predict, pose2Predict, flowPredict]).then((results) => {
+            // more like a good execution and less like a bad execution
+            let avgPosSim_1 = results[0][0], avgNegSim_1 = results[0][1], 
+              avgPosSim_2 = results[1][0], avgNegSim_2 = results[1][1],
+              outcome = ""; 
+            
+            flowClassifyResults = results[2];
+
+            if (avgPosSim_1 > avgNegSim_1 && avgPosSim_1 > avgPosSim_2 ) 
+              outcome = "Good";
+            else if (avgPosSim_2 > avgNegSim_2 && avgPosSim_2 >  avgPosSim_1)
+              outcome = "Bad";
+            else
+              outcome = "Indeterminate" */
+
+          Promise.all([pose1Predict, pose3Predict, flowPredict]).then((results) => {
+            let goodProb_1 = results[0][0][0], badProb_1 = results[0][0][1], 
+                goodProb_3 = results[1][0][0], badProb_3 = results[1][0][1], 
+                outcome = "";
+              
+            flowClassifyResults = results[2];
+
+            if (goodProb_1 < badProb_1) 
+              outcome = "Ears Not Cupped";
+
+            if (outcome == "") { // If there are no errors logged, then it is valid
+              outcome = "Valid";
+            }
+
+            if (document.getElementById('predict_by').value == "CNN") {
+              console.log ("Cupped Ears: Good/Bad/ED/Dir %f / %f / %f / %s ", goodProb_1.toFixed(3), badProb_1.toFixed(3),
+                wrist_ear_ED.toFixed(3), flowClassifyResults);
+              console.log ("Knees Touched: Good/Bad/ED/Dir %f / %f / %f / %s ", goodProb_3.toFixed(3), badProb_3.toFixed(3),
+                elbow_knee_ED.toFixed(3), flowClassifyResults);
+              console.log ("Outcome %s ", outcome.trim());
+            }
+
+            // Overwrite the outcome using angles measure, an option provided to user
+            // Keep the predicting code segment running to get feel of performance
+            if (document.getElementById('predict_by').value == "angles") {
+              outcome = "";
+              if (wrist_ear_ED > exercise.wrist_ear_dist)
+                outcome = "Ears Not Cupped";
+              else if (wrist_ear_ED <= exercise.wrist_ear_dist)
+                outcome = "Valid";
+              console.log("WE ED %s / EK ED %s / Outcome: %s ", wrist_ear_ED.toFixed(3),
+                elbow_knee_ED.toFixed(3), outcome.trim());
+            }
+
+            // record the last 5 predicts
+            last10PosePredict.push({"outcome": outcome, "ears_cupped_p": goodProb_1.toFixed(3),
+              "ears_not_cupped_p": badProb_1.toFixed(3), "wrist_ear_ED": wrist_ear_ED.toFixed(3),
+              "knees_touched_p": goodProb_3.toFixed(3), "knees_not_touched_p": badProb_3.toFixed(3),
+              "elbow_knee_ED": elbow_knee_ED.toFixed(3), "dir": flowClassifyResults});
+
+            if (last10PosePredict.length == 11)
+                last10PosePredict.shift();
+          });
+        });
+
+        document.getElementById("UndisposedMem").innerHTML = "Undisposed Mem:" + (tf.memory().numBytes/ (1024 * 1024)).toFixed(1) + " MB";
+        lastSent = performance.now();
+      }
+    }
+
+    userAdvice = "";
+    let allEUCChks = last10PosePredict.filter(thisChk => /Ears Not Cupped/.test(thisChk.outcome));
+    if (allEUCChks.length > 5) // many instances of ears not cupped
+      userAdvice = "Ears Not Cupped ";
+
+    let allENKChks = last10PosePredict.map(thisChk => thisChk.elbow_knee_ED);
+    let min_ek_ed = Math.min.apply(null, allENKChks);    
+    let idxENKMin = allENKChks.findIndex(thisChk => thisChk == min_ek_ed);
+    
+    // A min has been reached since position 9 is smaller then position 10
+    // The 2nd check is to minimise false count when there is no actual movement. However
+    // dense optical flow may still register movement and therefore diff in ED
+    // If the sholuder is close to the hip, the the subject is not lying flat(still) 
+
+    console.log(">>> %f %f %f %f", idxENKMin, elbow[0], hip[0], eh_gap_at_rest);
+    if (idxENKMin == 8 && last10PosePredict.length > 8 &&
+      min_ek_ed < 0.80 * eh_gap_at_rest) {
+      exCount++;
+      if (min_ek_ed > exercise.elbow_knee_dist) {
+        if (userAdvice.length > 0)
+          userAdvice = userAdvice + ", " + "Knees Not Touched";
+        else
+          userAdvice = "Knees Not Touched";
+      }
+      userAdvice = userAdvice.trim();
+
+      if (userAdvice.length === 0) {
+        goodCount++;
+        updatePerfChart (true, "Good");
+      } else {
+        badCount++
+        updatePerfChart (false, userAdvice);
+      }
+      perfChart.update();
+    }
+    canvasCtx.restore();
+    canvasCtx.fillStyle = "white";
+    canvasCtx.font = "10px Comic Sans";
+    console.log("Total: " + exCount + ", Good: " + goodCount + ", Bad: " + badCount +
+      " / " + userAdvice);
+
+    canvasCtx.fillText("Total: " + exCount + ", Good: " + goodCount + ", Bad: " + badCount,
+      5, 15);
+    canvasCtx.fillText ("User Advice: " + userAdvice, 5, 25);
+
+    document.getElementById("poseResult").value = "Total: " + exCount + ", Good: " +
+    goodCount + ", Bad: " + badCount + " / " + userAdvice;
+  }
+
+  function setUpMediaPose() {
+    let pose =  new Pose({locateFile: (file) => {
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+    }});
+    pose.setOptions({
+      modelComplexity: 1,
+      smoothLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    return pose;
+  }
+  var pose = setUpMediaPose();
+  pose.onResults(onResults);
+
+  async function timerCallback(videoElement, videoPose) {
+    if (videoElement.paused || videoElement.ended)
+      return;
+
+    // send the frame to pose, wait and do it again recursively
+    await videoPose.send({image: videoElement});
+    setTimeout(() => {
+      timerCallback(videoElement, videoPose);
+    }, 0);
+  }
+
+  function playSelectedFile(event) {
+    var file = this.files[0];
+    videoElementFile.src = URL.createObjectURL(file);
+  }
+   
+  var inputFile = document.querySelector('#input_file');
+  inputFile.addEventListener('change', playSelectedFile, false);
+
+  inputType.addEventListener('change', async () => {
+    exCount = 0, goodCount = 0, badCount = 0, last10PosePredict = [];
+    if (typeof perfChart === "undefined" || perfChart != null)
+        perfChart.destroy();
+    perfChart = resetPerfChart(ctx);
+    if (inputType.checked) { // Camera selected
+      let camPose = setUpMediaPose();
+      camPose.onResults(onResults)
+      const camera = new Camera(videoElementCamera, {
+      onFrame: async () => {
+        await camPose.send({image: videoElementCamera});
+      },
+      width: 320,
+      height: 180
+      });
+      videoElementFile.pause();
+      resetOpenCv(videoElementCamera);
+      camera.start();
+    } else { // File selected
+      videoElementCamera.pause();
+      resetOpenCv(videoElementFile);
+      let videoPose = setUpMediaPose();
+      videoPose.onResults(onResults)
+      videoElementFile.addEventListener('play', () => {
+        exCount = 0, goodCount = 0, badCount = 0, last10PosePredict = [];
+        if (typeof perfChart === "undefined" || perfChart != null)
+          perfChart.destroy();
+        perfChart = resetPerfChart(ctx);
+        timerCallback(videoElementFile, videoPose);
+      });
+    }
+  });
+
+  // By default, choose file input
+
+  videoElementFile.addEventListener('play', () => {
+      exCount = 0, goodCount = 0, badCount = 0, last10PosePredict = [];
+      if (typeof perfChart === "undefined" || perfChart != null)
+        perfChart.destroy();
+      perfChart = resetPerfChart(ctx);
+      timerCallback(videoElementFile, pose);
+  });
+
+  var ctx = document.getElementById('perfChart').getContext('2d');
+
+  function resetPerfChart (ctxReset) {
+    return new Chart(ctxReset, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'No of repetitions',
+          data: [],
+          backgroundColor: [],
+          borderColor: [],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            ticks: {
+              autoskip: false,
+              maxRotation: 90,
+              minRotation:90
+             }
+          },
+          y: {
+            ticks: {
+              display: false
+             }
+          }
+        }
+      }
+    });
+  }
+
+  function updatePerfChart (valid, userAdvice) {
+    if (valid) {
+      perfChart.data.labels.push('Good');
+      perfChart.data.datasets[0].data.push(1);
+      perfChart.data.datasets[0].backgroundColor.push('lime');
+      perfChart.data.datasets[0].borderColor.push('lime');
+    } else {
+      perfChart.data.labels.push(userAdvice);
+      perfChart.data.datasets[0].data.push(1);
+      perfChart.data.datasets[0].backgroundColor.push('pink');
+      perfChart.data.datasets[0].borderColor.push('pink');
+    }
+  } 
+
+</script>
+</html>
