@@ -213,6 +213,347 @@ def profile():
         },
         # Add more age range mappings here if needed
     }
+    def su_bench(age,good_count):
+        male_su_bench_age_mapping = {
+            13: 34,
+            14: 37,
+            15: 37,
+            16: 37,
+            17: 37,
+            18: 37,
+            19: 37,
+            20: 34
+        }
+        female_su_bench_age_mapping = {
+            13: 22,
+            14: 24,
+            15: 25,
+            16: 26,
+            17: 27,
+            18: 27,
+            19: 27,
+            20: 25
+        }
+        fact = ""
+        if gender == "Male":
+            acceptable_age = max(male_su_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in male_su_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= male_su_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= male_su_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"
+        else:
+            acceptable_age = max(female_su_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in female_su_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= female_su_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= female_su_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"     
+        return fact
+
+               
+    situp_fact = su_bench(age, best_sit_up_score)
+
+    def pu_bench(age,good_count):
+        male_pu_bench_age_mapping = {
+            13: 23,
+            14: 23,
+            15: 25,
+            16: 25,
+            17: 27,
+            18: 27,
+            19: 27,
+            20: 22
+        }
+        female_pu_bench_age_mapping = {
+            13: 18,
+            14: 18,
+            15: 19,
+            16: 19,
+            17: 20,
+            18: 20,
+            19: 20,
+            20: 15
+        }
+        fact = ""
+        if gender == "Male":
+            acceptable_age = max(male_pu_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in male_pu_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= male_pu_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= male_pu_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"
+        else:
+            acceptable_age = max(female_pu_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in female_pu_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= female_pu_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= female_pu_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"     
+        return fact
+
+               
+    pushup_fact = pu_bench(age, best_push_up_score)
+
+    def j_bench(age,good_count):
+        male_j_bench_age_mapping = {
+            13: 189,
+            14: 206,
+            15: 218,
+            16: 226,
+            17: 230,
+            18: 232,
+            19: 232,
+            20: 225
+        }
+        female_j_bench_age_mapping = {
+            13: 153,
+            14: 160,
+            15: 165,
+            16: 169,
+            17: 172,
+            18: 174,
+            19: 174,
+            20: 174
+        }
+        fact = ""
+        if gender == "Male":
+            acceptable_age = max(male_j_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in male_j_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= male_j_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= male_j_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"
+        else:
+            acceptable_age = max(female_j_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in female_j_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= female_j_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= female_j_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"     
+        return fact
+
+               
+    jump_fact = j_bench(age, best_standing_broad_jump_score)
+
+    def s_bench(age,good_count):
+        male_s_bench_age_mapping = {
+            13: 20,
+            14: 20,
+            15: 21,
+            16: 21,
+            17: 21,
+            18: 21,
+            19: 24,
+            20: 22
+        }
+        female_s_bench_age_mapping = {
+            13: 15,
+            14: 15,
+            15: 16,
+            16: 16,
+            17: 17,
+            18: 18,
+            19: 20,
+            20: 19
+        }
+        fact = ""
+        if gender == "Male":
+            acceptable_age = max(male_s_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in male_s_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= male_s_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= male_s_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"
+        else:
+            acceptable_age = max(female_s_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in female_s_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= female_s_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= female_s_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"     
+        return fact
+
+               
+    squat_fact = s_bench(age, best_squats_with_ball_score)
+
+    def g_bench(age,good_count):
+        male_g_bench_age_mapping = {
+            13: 26,
+            14: 32,
+            15: 32,
+            16: 42,
+            17: 42,
+            18: 45,
+            19: 45,
+            20: 46
+        }
+        female_g_bench_age_mapping = {
+            13: 19,
+            14: 21,
+            15: 21,
+            16: 23,
+            17: 23,
+            18: 25,
+            19: 25,
+            20: 28
+        }
+        fact = ""
+        if gender == "Male":
+            acceptable_age = max(male_g_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in male_g_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= male_g_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= male_g_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"
+        else:
+            acceptable_age = max(female_g_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in female_g_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count >= female_g_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count >= female_g_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"     
+        return fact
+
+               
+    grip_fact = g_bench(age, best_grip_strength_score)
+
+    def r_bench(age,good_count):
+        male_r_bench_age_mapping = {
+            13: 820,
+            14: 780,
+            15: 760,
+            16: 740,
+            17: 720,
+            18: 710,
+            19: 700,
+            20: 700
+        }
+        female_r_bench_age_mapping = {
+            13: 990,
+            14: 980,
+            15: 970,
+            16: 960,
+            17: 950,
+            18: 940,
+            19: 930,
+            20: 960
+        }
+        fact = ""
+        if gender == "Male":
+            acceptable_age = max(male_r_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in male_r_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count <= male_r_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count <= male_r_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"
+        else:
+            acceptable_age = max(female_r_bench_age_mapping.keys())
+            if age < acceptable_age:
+                for agegroup in female_r_bench_age_mapping.keys():
+                    if age == agegroup:
+                        if good_count <= female_r_bench_age_mapping[agegroup]:
+                            fact = "Above Cohort"
+                        else:
+                            fact = "Below Cohort"
+            else:
+                if age >= 20:
+                    if good_count <= female_r_bench_age_mapping[20]:
+                        fact = "Above Cohort"
+                    else:
+                        fact = "Below Cohort"     
+        return fact
+
+               
+    run_fact = r_bench(age, best_2_4km_run_score)
 
     def get_situp_score(age, good_count):
         male_situp_score_age_mapping = {
@@ -797,6 +1138,34 @@ def profile():
     }
     lowest_score = min(exercise_score.values())
 
+    fact_list = [
+        {
+            "exercise": "Push Up",
+            "fact": pushup_fact,
+        },
+        {
+            "exercise": "Sit Up",
+            "fact": situp_fact,
+        },
+        {
+            "exercise": "Squats with Ball",
+            "fact": squat_fact,
+        },
+        {
+            "exercise": "Grip Strength",
+            "fact": grip_fact,
+        },
+        {
+            "exercise": "Standing Broad Jump",
+            "fact": jump_fact,
+        },
+        {
+            "exercise": "2.4Km Run",
+            "fact": run_fact,
+        }
+        
+    ]
+
     # Find exercises with the lowest score (in case of ties)
     exercises_with_lowest_score = [exercise for exercise, score in exercise_score.items() if score == lowest_score and score != 0]
     return render_template(
@@ -807,7 +1176,8 @@ def profile():
         best_scores=best_scores,
         fitness_level=fitness_level,
         total_score=total_score,
-        exercises_with_lowest_score=exercises_with_lowest_score
+        exercises_with_lowest_score=exercises_with_lowest_score,
+        fact_list=fact_list
     )
 
 
