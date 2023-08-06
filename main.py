@@ -922,19 +922,11 @@ def vid_sample_ios():
 # Team Member pages
 @app.route("/member")
 def member():
-    query = "SELECT * FROM fyp.pictures"
-    result = session.execute(query)
-    
-    image_urls = []
-    for row in result:
-        image_blob = row.image  # Assuming 'image' is the column containing the blob
-        image_base64 = base64.b64encode(image_blob).decode("utf-8")
-        image_urls.append({"id":row.id,"image":image_base64})
     if "sessID" in fsession:
         sessionID = fsession["sessID"]
-        return render_template("project_member.html", sessionID=sessionID, image_urls=image_urls)
+        return render_template("project_member.html", sessionID=sessionID)
     else:
-        return render_template("project_member.html", image_urls=image_urls)
+        return render_template("project_member.html")
 
 
 # About Page
