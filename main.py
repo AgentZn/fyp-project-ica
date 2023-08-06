@@ -1197,7 +1197,11 @@ def generate_chart():
         bad_count = data.badcount
         poseresult = data.poseresult
         image_blob = data.chart
-        image_base64 = base64.b64encode(image_blob).decode("utf-8")
+        image_base64 = None
+        if image_blob is not None:
+            image_base64 = base64.b64encode(image_blob).decode("utf-8")
+        
+            
         # Render the generate.html template with exercise data
         return render_template(
             "generate.html",

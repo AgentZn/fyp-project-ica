@@ -89,6 +89,19 @@
                     <button type="submit">2.4km run</button>
                 </form>
 
+                <h3>Benchmarking</h3>
+                <table>
+                    <tr>
+                        <th>Exercise</th>
+                        <th>Statement</th>
+                    </tr>
+                    {% for facts in fact_list %}
+                    <tr>
+                        <td>{{ facts.exercise }}</td>
+                        <td>{{ facts.fact }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
 
                 <h3>Exercises you need to improve on: </h3>
 
@@ -167,7 +180,7 @@
                 <p>No scores available</p>
                 {% endif %}
 
-
+                
 
             </div>
             <div class="col-sm-2 sidenav">

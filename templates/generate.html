@@ -11,7 +11,11 @@
     <p>Bad Count: {{ bad_count }}</p>
     <p>Positive Result: {{ poseresult }}</p>
     <h4>Chart:</h4>
-    <img src="data:image/png;base64,{{ image_base64 }}" alt="Generated Chart" width="1120" height="630">
+    {% if image_base64 %}
+        <img src="data:image/png;base64,{{ image_base64 }}" alt="Generated Chart" width="1120" height="630">
+    {% else %}
+        <p>No chart image available.</p>
+    {% endif %}
     <canvas id="chart"></canvas>
     
     <script>
