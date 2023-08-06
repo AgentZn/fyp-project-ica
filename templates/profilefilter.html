@@ -74,7 +74,7 @@
                     scores.sort(function (a, b) {
                         return new Date(a.timestamp) - new Date(b.timestamp);
                     });
-                    
+
                     // Create datasets array to hold the data for each exercise
                     var datasets = [];
 
@@ -204,7 +204,12 @@
 
 
                 <h2>Scores</h2>
+
+
                 {% if histscores %}
+                
+                {% if "Push Ups" in histscores|map(attribute='exercise') or "Sit Ups" in histscores|map(attribute='exercise') or "Squats with
+                Ball" in histscores|map(attribute='exercise') %}
                 <table>
                     <tr>
                         <th>Exercise</th>
@@ -215,25 +220,66 @@
                         <th>Video</th>
                         <th>Generate Chart</th>
                     </tr>
-                    {% for score in histscores %}
+                    {% for iscore in histscores %}
                     <tr>
-                        <td>{{ score.exercise }}</td>
-                        <td>{{ score.goodcount }}</td>
-                        <td>{{ score.badcount }}</td>
-                        <td>{{ score.poseresult }}</td>
+                        <td>{{ iscore.exercise }}</td>
+                        <td>{{ iscore.goodcount }}</td>
+                        <td>{{ iscore.badcount }}</td>
+                        <td>{{ iscore.poseresult }}</td>
 
-                        <td>{{ score.video }}</td>
+                        <td>{{ iscore.video }}</td>
                         <td>
                             <form action="/generate" method="POST">
-                                <input type="hidden" name="exercise" value="{{ score.poseresult }}">
+                                <input type="hidden" name="exercise" value="{{ iscore.poseresult }}">
                                 <button type="submit">Generate</button>
                             </form>
                         </td>
                     </tr>
                     {% endfor %}
                 </table>
+                {% elif "Grip Strength" in histscores|map(attribute='exercise') %}
+                <table>
+                    <tr>
+                        <th>Exercise</th>
+                        <th>Weight</th>
+                    </tr>
+                    {% for iscore in histscores %}
+                    <tr>
+                        <td>{{ iscore.exercise }}</td>
+                        <td>{{ iscore.weight }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% elif "2.4km run" in histscores|map(attribute='exercise') %}
+                <table>
+                    <tr>
+                        <th>Exercise</th>
+                        <th>Seconds</th>
+                    </tr>
+                    {% for iscore in histscores %}
+                    <tr>
+                        <td>{{ iscore.exercise }}</td>
+                        <td>{{ iscore.seconds }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% elif "Standing Broad Jump" in histscores|map(attribute='exercise') %}
+                <table>
+                    <tr>
+                        <th>Exercise</th>
+                        <th>Total Distance</th>
+                    </tr>
+                    {% for iscore in histscores %}
+                    <tr>
+                        <td>{{ iscore.exercise }}</td>
+                        <td>{{ iscore.totaldist }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
                 {% else %}
                 <p>No scores available</p>
+                {% endif %}
+                
                 {% endif %}
 
 
