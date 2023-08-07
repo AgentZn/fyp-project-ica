@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet"/><link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"/><meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Decode Base64 to Video</title>
+<style>
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+}
+
+.container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    color: #333;
+}
+
+button {
+    background-color: #007BFF;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+textarea, video {
+    width: 100%;
+}
+
+.navbar-nav {
+    list-style-type: none;
+    padding: 0;
+}
+
+.nav-item {
+    display: inline-block;
+    margin-right: 15px;
+}
+
+.nav-link {
+    color: #007BFF;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: #0056b3;
+}
+</style><style>
+button {
+    position: relative;
+    overflow: hidden;
+}
+
+button:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s;
+}
+
+button:hover:after {
+    left: 100%;
+}
+</style><style>
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: url('https://www.transparenttextures.com/patterns/nistri.png');
+    opacity: 0.1;
+    z-index: -1;
+}
+
+input[type="text"], input[type="file"], textarea {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 4px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus, input[type="file"]:focus, textarea:focus {
+    border-color: #007BFF;
+    box-shadow: 0 0 8px rgba(0,123,255,0.2);
+}
+
+body {
+    line-height: 1.5;
+}
+
+h1, h2 {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.container {
+    transition: box-shadow 0.3s;
+}
+
+.container:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+</style><style>
+button:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+</style><style>
+.parallax-section {
+    position: relative;
+    background-image: url('/static/img/strike-academy.jpg');
+    height: 400px;
+    background-attachment: fixed;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+</style></head>
+<body><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script><div class="parallax-section mt-5 mb-5"></div><div class="container mt-5">
+<h1 class="animate__animated animate__fadeIn">Decode Base64 to Video</h1>
+<input accept=".txt" class="animate__animated animate__fadeInUp" id="base64FileInput" type="file"/><br/>
+
+<hr/><h2 class="animate__animated animate__fadeInDown">Decoded Video:</h2>
+<video controls="" width="400"></video>
+<script>
+        function decodeAndPlay() {
+            const fileInput = document.getElementById('base64FileInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.readAsText(file, "UTF-8");
+                reader.onload = function (evt) {
+                    const videoElement = document.querySelector('video');
+                    videoElement.src = evt.target.result;
+                    videoElement.play();
+                }
+            } else {
+                alert('Please upload a .txt file containing the base64-encoded video.');
+            }
+        }
+    </script>
+<div class="btn-group mt-3"><button class="animate__animated animate__bounceIn" data-placement="top" data-toggle="tooltip" onclick="decodeAndPlay()" title="Click to decode and play the video">Decode and Play<i class="fas fa-play-circle ml-2"></i></button></div></div><script>
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script><footer class="mt-5 text-center"><i class="fab fa-facebook mx-3"></i><i class="fab fa-twitter mx-3"></i><i class="fab fa-linkedin mx-3"></i><i class="fab fa-instagram mx-3"></i></footer>
+<div aria-hidden="true" aria-labelledby="encodeModalLabel" class="modal fade" id="encodeModal" role="dialog" tabindex="-1">
+<div class="modal-dialog" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title" id="encodeModalLabel">Video Encoding</h5>
+<button aria-label="Close" class="close" data-dismiss="modal" type="button">
+<span aria-hidden="true">×</span>
+</button>
+</div>
+<div class="modal-body">
+        Your video is being encoded. Please wait...
+      </div>
+<div class="modal-footer">
+<button class="btn btn-secondary" data-dismiss="modal" type="button">Close</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+$(document).ready(function() {
+    // Function to simulate encoding progress
+    function simulateProgress() {
+        var width = 0;
+        var interval = setInterval(function() {
+            if (width >= 100) {
+                clearInterval(interval);
+                // Close the modal when encoding is complete
+                $('#encodeModal').modal('hide');
+            } else {
+                width++;
+                $('.progress-bar').css('width', width + '%');
+            }
+        }, 50);  // 50ms interval for a total of 5 seconds encoding simulation
+    }
+
+    // Trigger the modal and progress simulation when the "Encode" button is clicked
+    $('button:contains("Encode")').click(function() {
+        $('#encodeModal').modal('show');
+        simulateProgress();
+    });
+});
+</script>
+<h2 class="mt-5 text-center">Feedback</h2>
+<p class="text-center">We'd love to hear your thoughts!</p>
+<form>
+    <div class="textarea-container" style="max-width: 600px; margin: 0 auto;">
+        <textarea class="form-control" placeholder="Write your feedback here..." rows="3"></textarea>
+    </div>
+    
+<button class="btn btn-primary d-block mx-auto" type="submit">Submit</button>
+</form>
+</body>
+</html>

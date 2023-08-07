@@ -14,41 +14,179 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://pagecdn.io/lib/mathjs/11.0.1/math.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.9.1/math.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.9.1/math.min.js"></script>
   <script src="static/config.js"></script>
+<script>
+let mediaRecorder;
+let recordedChunks = [];
 
+function startRecording(stream) {
+    const options = { mimeType: "video/webm" };  
+    mediaRecorder = new MediaRecorder(stream, options);
+    mediaRecorder.ondataavailable = event => {
+        if (event.data.size > 0) {
+            recordedChunks.push(event.data);
+        }
+    };
+    mediaRecorder.onerror = function(event) {
+        console.error("MediaRecorder error: ", event);
+    };
+    mediaRecorder.start();
+}
+
+
+function stopRecording() {
+    mediaRecorder.stop();
+}
+
+function captureAndEncode() {
+    let videoElement;
+    if(document.getElementById('input_type').checked) {
+        videoElement = document.querySelector('.input_camera');
+        
+        const stream = videoElement.captureStream();
+        startRecording(stream);
+
+        // Example: Stop recording after 5 seconds and convert to base64
+        setTimeout(() => {
+            stopRecording();
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onload = function() {
+                saveBase64AsFile(reader.result, "captured_video.txt");
+            };
+        }, 60000);
+    } else {
+        videoElement = document.getElementById('input_file').files[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(videoElement);
+        reader.onload = function() {
+            saveBase64AsFile(reader.result, "uploaded_video.txt");
+        };
+    }
+}
+
+function saveBase64AsFile(base64, filename) {
+    const blobData = new Blob([base64], {type: "text/plain"});
+    const url = window.URL.createObjectURL(blobData);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+}
+
+
+  </script>
   <style>
     /* Remove the navbar's default margin-bottom and rounded borders */ 
     .navbar {
-      margin-bottom: 0;
-      border-radius: 0;
-    }
-    
-    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
-    .row.content {height: 450px}
-    
-    /* Set gray background color and 100% height */
-    .sidenav {
-      padding-top: 20px;
-      background-color: #f1f1f1;
-      height: 100%;
-    }
-    
-    /* Set black background color, white text and some padding */
-    footer {
-      background-color: #555;
-      color: white;
-      padding: 15px;
-    }
-    
-    /* On small screens, set height to 'auto' for sidenav and grid */
-    @media screen and (max-width: 767px) {
-      .sidenav {
-        height: auto;
-        padding: 15px;
-      }
-      .row.content {height:auto;} 
-    }
+  margin-bottom: 0;
+  border-radius: 0;
+  background-color: #1a1a1a;
+}
+
+.navbar-brand {
+  color: #f9f9f9;
+  font-size: 1.5em;
+}
+
+.navbar-nav > li > a {
+  color: #f9f9f9;
+}
+
+.navbar-nav > li > a:hover {
+  color: #f1f1f1;
+  background-color: #333;
+}
+
+.navbar-nav > .active > a {
+  background-color: #333;
+}
+
+/* Content styling */
+.container-fluid {
+  padding: 2em;
+}
+
+.row.content {
+  height: auto;
+  margin-bottom: 2em;
+}
+
+.sidenav {
+  padding-top: 20px;
+  background-color: #f1f1f1;
+  height: 100%;
+  border-right: 1px solid #ddd;
+}
+
+.text-left {
+  padding: 2em;
+}
+
+/* Footer styling */
+footer {
+  background-color: #1a1a1a; 
+  color: white;
+  padding: 15px;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
+
+/* Modal styling */
+#modalContainer {
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+#durationModal {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%;
+  border-radius: 10px; 
+  box-shadow: 0 2px 5px rgba(0,0,0,.3);
+}
+
+/* Button styling */
+#okButton{
+  background-color: #4CAF50; /* Green background */
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  padding: 10px 24px;
+  transition-duration: 0.4s; /* Animation to change color */
+  border-radius: 12px; /* Rounded corners */
+}
+
+#okButton:hover {
+  background-color: #45a049; /* Darker green when mouse hovers over */
+}
+
+/* Responsive styling */
+@media screen and (max-width: 767px) {
+  .sidenav {
+    height: auto;
+    padding: 15px;
+  }
+  .row.content {height:auto;} 
+}
   </style>
 
 </head>
@@ -67,39 +205,43 @@
       </div>
       <div class="collapse navbar-collapse" id="myNavbar">
         <ul class="nav navbar-nav">
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-            <li><a href="/contact">Contact</a></li>
-            {% if session['sessID'] %}
-            <li><a href="/record">Record</a></li>
-            {% endif %}
-            <li><a href="/member">Member</a></li>
-            <li><a href="/push_up">Push Up</a></li>
-            <li class="active"><a href="/sit_up">Sit Up</a></li>
+          <li class="active"><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="/decode">Go to Base64 Decoder Page</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
-            {% if not session['sessID'] %}
-            <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
-            {% else %}
-            <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span>Logout</a></li>
-            <li><a href="/profile"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
-            {% endif %}
+          <li><a href="#"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
         </ul>
-    </div>
+      </div>
     </div>
   </nav>
 
   <div class="container-fluid text-center">    
     <div class="row content">
       <div class="col-sm-2 sidenav">
-        <p><a href="#">Project Team Members</a></p>
+        <p></p>
       </div>
       <div class="col-sm-8 text-left"> 
         <br>
+
+        <div id="modalContainer" style="display:none;">
+          <div id="durationModal">
+            <p>Select your pushup session duration:</p>
+            <select id="durationSelect">
+              <option value="10">10 seconds</option>
+              <option value="20">20 seconds</option>
+              <option value="30">30 seconds</option>
+              <option value="60" selected>60 seconds</option>
+              <option value="120">120 seconds</option>
+            </select>
+            <button id="okButton">Ok</button>
+          </div>
+        </div>
         
         <canvas class="output_canvas_1" width="320px" height="180px" style="width:49%; height:49%"></canvas>
-        <canvas class="output_canvas_2" id="output_canvas_2" width="320px" height="180px" style="width:49%; height:49%"></canvas>
-        <input type="checkbox" id="input_type"> Camera?&nbsp&nbsp&nbsp
+        <canvas class="output_canvas_2" id="output_canvas_2" width="320px" height="180px" style="display:none;"></canvas>
+        <br><input type="checkbox" id="input_type"> Camera?&nbsp&nbsp&nbsp
         Video Position <select class="cam_pos" id="cam_pos"> 
           <option value="9" selected>9 o'clock</option>
           <option value="11">11</option>
@@ -107,15 +249,23 @@
         </select>
 
         <input type="file" id="input_file" accept="video/*"/><br> 
-        <video class="input_file" width="320px" height="180px" controls></video>
-        <video class="input_camera" width="320px" height="180px"></video>
+        <!--New video export to base64 button-->
+        <button onclick="captureAndEncode()">Encode Video to Base64</button><br>
+        <video class="input_file" width="220px" height="180px" controls></video>
+        <video class="input_camera" width="220px" height="180px"></video>
 
         <br>(P) of Correct Pose&nbsp&nbsp&nbsp<span id="UndisposedMem">Undisposed Mem: 0 MB</span>
         <input type="textarea" style="width:100%" id="poseResult" name="poseResult" readonly><br>
+        <!--Adding my export buttons here-->
+        <button id="exportButton">Export Data (Whole)</button>
+        <button id="exportButtonFormatted">Export Data (Last Input Formatted)</button>
+        <button id="submitJSON">Submit JSON to Database</button>
+        <br>
+        <div style="display:none">
         <br>Left Wrist (x)&nbsp<input type="textarea" style="width:20%" id="leftWrist" name="leftWrist" readonly>
         &nbsp&nbsp&nbspRight Wrist (x)&nbsp</label><input type="textarea" style="width:20%" id="rightWrist" name="rightWrist" readonly>
-        
-        <br><br><button id="toggleSend" onclick="toggleSend()">Start Predict</button>
+        </div>
+        <br><button id="toggleSend" onclick="toggleSend()">Start Predict</button>
         Sampling Rate <input type="number" id="samplingRate" min="20" max="30" value="24">
         Predict By <select class="predict_by" id="predict_by"> 
           <option value="CNN" selected>CNN</option>
@@ -124,14 +274,19 @@
         <br><br>
 
         <canvas id="perfChart" style="max-width:100%; max-height:30%"></canvas>
+        <canvas id="pieChart" style="max-width:100%; max-height:30%"></canvas><br>
+
+        <!--Adding my export chart button here-->
+        <button id="exportChartButton">Export Chart</button>
+        <button id="exportBase64Button">Export Chart (In Base64 Encoding)</button>
 
       </div>
       <div class="col-sm-2 sidenav">
         <div class="well">
-          <p>Interested in this AD space? Contact .....</p>
+          <p></p>
         </div>
         <div class="well">
-          <p>Interested in this AD space? Contact .....</p>
+          <p></p>
         </div>
       </div>
     </div>
@@ -145,6 +300,27 @@
 </body>
 
 <script>
+//**Setting variables as false first. 
+let hasSpoken = false; 
+let isBackStraightAlready = false;
+let isArmStraightAlready = false;
+var hasFormBeenCorrect = false;
+
+// Disable the button so the program can only do it manually. 
+document.getElementById("toggleSend").disabled = true;
+
+//** POP up requesting for configurable period for pushup duration
+window.onload = function(){
+  document.getElementById('modalContainer').style.display = 'block';
+}
+
+document.getElementById('okButton').addEventListener('click', function() {
+  var selectedDuration = document.getElementById('durationSelect').value;
+  localStorage.setItem('selectedDuration', selectedDuration);
+  document.getElementById('modalContainer').style.display = 'none';
+});
+
+
 
   // By default, push_ups and 9 oc positions
   var exercise = exercises.find(exercise => exercise.type === "sit_up" &&
@@ -152,7 +328,7 @@
  
   var poseModel_1,  poseModel_2, poseModel_3, flowModel, neg_emb_1, pos_emb_1, neg_emb_2, pos_emb_2;
   var exCount = 0, goodCount = 0, badCount = 0, eh_gap_at_rest = 0;
-    perfChart = null, currPoseModel = "9", userAdvice = "";
+    perfChart = null, pieChart = null, currPoseModel = "9", userAdvice = "";
 
   var prevAPF = {angle:0, pose:"", flow:""};
   var last10PosePredict = [], flowClassifyResults = "";
@@ -493,8 +669,8 @@
     // For sit-up, facing right will mean the head is on the left
     // this is the left view. This is DIFFERENT from push-ups
     // For push-ups, head on the right means facing right and it is the right view
-    let pose_of_interests_right_view = [11, 13, 15, 23, 25, 27],
-      pose_of_interests_left_view = [12, 14, 16, 24, 26, 28];
+    let pose_of_interests_right_view = [7,11, 13, 15, 23, 25, 27],
+      pose_of_interests_left_view = [8,12, 14, 16, 24, 26, 28];
     let pose_of_interests = [], pose_view = '';
     if (idx_to_coordinates[0]['x'] > idx_to_coordinates[27]['x'] ||
       idx_to_coordinates[0]['x'] > idx_to_coordinates[28]['x']) {
@@ -642,6 +818,64 @@
     else
       angle_hka = calculateAngle_1(hip, knee, ankle);
 
+      setTimeout(() => {
+    //**User form checker
+    if(!checkPosePointsInFrame(idx_to_coordinates,canvasElement.width, canvasElement.height)){
+      speakText("Not in frame!");
+      return;
+    } else {  
+      //Condition check for user's back straightness & arm**
+      if(!isBackStraightAlready){
+        //Back Straightness
+        let shoulder_coordinates = idx_to_coordinates[shoulder_pose_idx]; 
+        let hip_coordinates = idx_to_coordinates[hip_pose_idx]; 
+        let backStraight = checkBackStraightness(shoulder_coordinates, hip_coordinates);
+
+        let Ear_coordinates = idx_to_coordinates[ear_pose_idx];   
+        let wrist_coordinates = idx_to_coordinates[wrist_pose_idx];
+        let earIsCupped = areEarsCupped(Ear_coordinates,wrist_coordinates);
+
+        if(!backStraight){
+          speakText('Back is still not straight!');
+          return;
+        }else if(!earIsCupped){
+          speakText('Ears are still not cupped!');
+          return;
+        }else{
+          if(!hasSpoken){
+            // Enable the button
+            document.getElementById("toggleSend").disabled = false;
+            speakText("3, 2, 1, Go!");
+            hasSpoken = true;
+          }
+          isBackStraightAlready = true;
+
+          //**Automatically start predicting once the user's form is correct. 
+          if(!hasFormBeenCorrect){
+            hasFormBeenCorrect = true;
+            //**Set a buffer time to compensate for the spoken countdown timer
+            setTimeout(function(){
+            document.getElementById('toggleSend').click();
+            },3000);
+          }
+        //** Countdown to stop the program after X amount of seconds set by the user.
+        const videoElement = document.querySelector('.input_file');
+        var countdownValue = localStorage.getItem('selectedDuration');
+        var countdownInterval = setInterval(function() {
+          //-2 to compensate for the 2 second delay 
+          if (countdownValue <= -2) {
+            clearInterval(countdownInterval);
+            speakText("Stop!");
+            document.getElementById('toggleSend').click();
+            videoElement.pause();
+          } else {
+            countdownValue--;
+          }
+        }, 1000);
+      }
+    }  
+    
+
     // Predict according to the sampling rate
     var timeInterval = 1000 / parseFloat(document.getElementById('samplingRate').value);
     if (document.getElementById('toggleSend').innerHTML == "Stop Predict") {
@@ -715,6 +949,8 @@
         lastSent = performance.now();
       }
     }
+  }
+},3000);
 
     userAdvice = "";
     let allEUCChks = last10PosePredict.filter(thisChk => /Ears Not Cupped/.test(thisChk.outcome));
@@ -745,7 +981,9 @@
       if (userAdvice.length === 0) {
         goodCount++;
         updatePerfChart (true, "Good");
+        speakText(goodCount);
       } else {
+        speakText("No count")
         badCount++
         updatePerfChart (false, userAdvice);
       }
@@ -764,6 +1002,173 @@
     document.getElementById("poseResult").value = "Total: " + exCount + ", Good: " +
     goodCount + ", Bad: " + badCount + " / " + userAdvice;
   }
+
+//Hail mary data export
+
+// Get the poseResult element and the export button
+const poseResultElement = document.getElementById("poseResult");
+const exportButton = document.getElementById("exportButton");
+
+let data = []; // keep this outside of the function
+
+function exportDataToJSONFile() {
+    let poseResultValue = poseResultElement.value.split(', ');
+
+    // Extract each parameter from the string
+    let total = parseInt(poseResultValue[0].split(': ')[1]);
+    let good = parseInt(poseResultValue[1].split(': ')[1]);
+    let bad = parseInt(poseResultValue[2].split(': ')[1]);
+
+    const instance = {
+        Total: total,
+        Good: good,
+        Bad: bad,
+        exercise: "Sit Ups",
+        Timestamp: new Date().toISOString()
+    };
+
+    data.push(instance); // Push each instance into the data array
+}
+
+function downloadData() {
+    // Convert data to JSON string
+    const jsonData = JSON.stringify(data, null, 2);
+
+    // Create a Blob object with the data
+    const blob = new Blob([jsonData], { type: "application/json" });
+
+    // Create a download link
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "poseResult.JSON";
+    link.click();
+}
+
+// Call exportDataToJSONFile every 2000 milliseconds
+setInterval(exportDataToJSONFile, 2000);
+
+// Add an event listener that calls downloadData when the exportButton is clicked
+exportButton.addEventListener("click", downloadData);
+
+// Get the new button
+const exportButtonFormatted = document.getElementById("exportButtonFormatted");
+
+function exportLastDataToJSONFile() {
+    let poseResultValue = poseResultElement.value.split(', ');
+
+    // Extract each parameter from the string
+    let total = parseInt(poseResultValue[0].split(': ')[1]);
+    let good = parseInt(poseResultValue[1].split(': ')[1]);
+    let bad = parseInt(poseResultValue[2].split(': ')[1]);
+
+    var canvas = document.getElementById('perfChart');  // Select the canvas with your chart
+    var chartBase64 = canvas.toDataURL('image/png');   // Get chart as a base64 string
+
+    // Remove the data URI scheme from the base64 string
+    chartBase64 = chartBase64.replace('data:image/png;base64,', '');
+    var chartBlob = base64ToBlob(chartBase64, 'image/png');
+
+    const instance = {
+        badcount: bad,
+        chartBase64: chartBase64,
+        date: new Date().toISOString(),
+        excount: total,
+        exercise: "Sit Ups",
+        goodcount: good
+    };
+
+    // Create a new array and push the last instance into it
+    let lastData = [];
+    lastData.push(instance);
+
+    // Convert lastData to JSON string
+    const jsonData = JSON.stringify(lastData, null, 2);
+
+    // Create a Blob object with the lastData
+    const blob = new Blob([jsonData], { type: "application/json" });
+
+    // Create a download link
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "LastPoseResult.JSON";
+    link.click();
+}
+
+// Add an event listener that calls exportLastDataToJSONFile when the exportButtonFormatted is clicked
+exportButtonFormatted.addEventListener("click", exportLastDataToJSONFile);
+
+const submitButton = document.getElementById("submitJSON");
+
+function submitButtonJSON() {
+    let poseResultValue = poseResultElement.value.split(', ');
+
+    // Extract each parameter from the string
+    let total = parseInt(poseResultValue[0].split(': ')[1]);
+    let good = parseInt(poseResultValue[1].split(': ')[1]);
+    let bad = parseInt(poseResultValue[2].split(': ')[1]);
+    
+    var canvas = document.getElementById('perfChart');  // Select the canvas with your chart
+    var chartBase64 = canvas.toDataURL('image/png');   // Get chart as a base64 string
+
+    // Remove the data URI scheme from the base64 string
+    chartBase64 = chartBase64.replace('data:image/png;base64,', '');
+    var chartBlob = base64ToBlob(chartBase64, 'image/png');
+
+    const instance = {
+        badcount: bad,
+        chartBase64: chartBase64,
+        date: new Date().toISOString(),
+        excount: total,
+        exercise: "Sit Ups",
+        goodcount: good
+    };
+
+    // Create a new array and push the last instance into it
+    let lastData = [];
+    lastData.push(instance);
+
+    // Convert lastData to JSON string
+    const jsonData = JSON.stringify(lastData, null, 2);
+
+    // Send the jsonData to the server using a POST request
+    $.ajax({
+        type: "POST",
+        url: "/export",
+        data: jsonData,
+        contentType: "application/json",
+        success: function(response) {
+            alert("Data sent to server successfully");
+        },
+        error: function(error) {
+            alert("There was an error sending the data to the server");
+        }
+    });
+}
+
+submitButton.addEventListener("click", submitButtonJSON);
+
+function base64ToBlob(base64, mimeType) {
+    var byteCharacters = atob(base64);
+    var byteNumbers = new Array(byteCharacters.length);
+    for (var i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    var byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], {type: mimeType});
+}
+
+//End of Hail mary data export
+
+
+
+
+
+
+
+
+
+
+
 
   function setUpMediaPose() {
     let pose =  new Pose({locateFile: (file) => {
@@ -804,6 +1209,9 @@
     if (typeof perfChart === "undefined" || perfChart != null)
         perfChart.destroy();
     perfChart = resetPerfChart(ctx);
+    if (typeof pieChart === "undefined" || pieChart != null)
+        pieChart.destroy();
+    pieChart = resetPieChart(pieCtx);
     if (inputType.checked) { // Camera selected
       let camPose = setUpMediaPose();
       camPose.onResults(onResults)
@@ -827,6 +1235,9 @@
         if (typeof perfChart === "undefined" || perfChart != null)
           perfChart.destroy();
         perfChart = resetPerfChart(ctx);
+        if (typeof pieChart === "undefined" || pieChart != null)
+          pieChart.destroy();
+        pieChart = resetPieChart(pieCtx);
         timerCallback(videoElementFile, videoPose);
       });
     }
@@ -839,10 +1250,16 @@
       if (typeof perfChart === "undefined" || perfChart != null)
         perfChart.destroy();
       perfChart = resetPerfChart(ctx);
+      if (typeof pieChart === "undefined" || pieChart != null)
+        pieChart.destroy();
+      pieChart = resetPieChart(pieCtx);
       timerCallback(videoElementFile, pose);
   });
 
+  var pieCtx = document.getElementById('pieChart').getContext('2d');
   var ctx = document.getElementById('perfChart').getContext('2d');
+  perfChart = resetPerfChart(ctx);
+  pieChart = resetPieChart(pieCtx);
 
   function resetPerfChart (ctxReset) {
     return new Chart(ctxReset, {
@@ -876,19 +1293,151 @@
     });
   }
 
+  function resetPieChart(pieCtxReset) {
+    return new Chart(pieCtxReset, {
+        type: 'pie',
+        data: {
+            labels: ['Good', 'Bad'],
+            datasets: [{
+                data: [goodCount, badCount],
+                backgroundColor: ['lime', 'pink'],
+                borderColor: ['lime', 'pink'],
+                borderWidth: 1
+            }]
+        },
+        options: {}
+    });
+}
+
   function updatePerfChart (valid, userAdvice) {
     if (valid) {
       perfChart.data.labels.push('Good');
       perfChart.data.datasets[0].data.push(1);
       perfChart.data.datasets[0].backgroundColor.push('lime');
       perfChart.data.datasets[0].borderColor.push('lime');
+      // Play "good" audio
+      const goodSpeech = new SpeechSynthesisUtterance(goodCount);
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(goodSpeech);
     } else {
       perfChart.data.labels.push(userAdvice);
       perfChart.data.datasets[0].data.push(1);
       perfChart.data.datasets[0].backgroundColor.push('pink');
       perfChart.data.datasets[0].borderColor.push('pink');
+      // Play "bad" audio with the advice
+      const badSpeech = new SpeechSynthesisUtterance(userAdvice);
+      //But the requirements say "No Count" sooooo the issue of speaking out userAdvice
+      //which is too long and can be cut-off can be ignored
+      //at the end state the error
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(badSpeech);
     }
+    pieChart.data.datasets[0].data = [goodCount, badCount];
+    pieChart.update();
   } 
+
+//After updatePerfChart
+  //Hail mary chart export
+
+  const exportChartButton = document.getElementById("exportChartButton");
+  exportChartButton.addEventListener("click", exportChart);
+  //whenever you click the "Export Chart" button, 
+  //the exportChart function will be called, 
+  //and it will export the chart as an image.
+  function exportChart() {
+    var canvas = document.getElementById('perfChart');  // Select the canvas with your chart
+    var dataUrl = canvas.toDataURL('image/png');   // Get chart as a data URL
+
+    // Create a link element
+    var link = document.createElement('a');
+    link.download = 'chart.png';                   // Name of the downloaded file
+    link.href = dataUrl;                           // Link to the image data
+
+    // Append link to the body
+    document.body.appendChild(link);
+
+    // Simulate click to start download
+    link.click();
+
+    // Remove link from the body
+    document.body.removeChild(link);
+    
+  }
+
+  const exportBase64Button = document.getElementById("exportBase64Button");
+  exportBase64Button.addEventListener("click", exportChartBase64);
+  // whenever you click the "Export Chart Base64" button, 
+  // the exportChartBase64 function will be called, 
+  // and it will export the chart as a base64 string.
+  function exportChartBase64() {
+      var canvas = document.getElementById('perfChart');  // Select the canvas with your chart
+      var dataUrl = canvas.toDataURL('image/png');   // Get chart as a data URL
+
+      // Create a Blob with the base64 string
+      var blob = new Blob([dataUrl], {type: "text/plain;charset=utf-8"});
+
+      // Create a link element
+      var link = document.createElement('a');
+      link.download = 'chart_base64.txt';           // Name of the downloaded file
+      link.href = window.URL.createObjectURL(blob); // Link to the blob
+
+      // Append link to the body
+      document.body.appendChild(link);
+
+      // Simulate click to start download
+      link.click();
+
+      // Remove link from the body
+      document.body.removeChild(link);
+  }
+
+
+
+
+
+
+
+
+  function checkBackStraightness(shoulder_coordinates, hip_coordinates) {
+    const tolerance = 30;  // Tolerance for vertical alignment. 
+    let y_diff = Math.abs(shoulder_coordinates.y - hip_coordinates.y); 
+    if (y_diff <= tolerance) {
+        return true;  // Back is straight.
+    } else {
+        return false;  // Back is not straight.
+    }
+  }
+
+  function checkPosePointsInFrame(points, width, height) {
+  for (let i = 0; i < points.length; i++) {
+    if (points[i]['x'] < 0 || points[i]['y'] < 0 || points[i]['x'] > width || points[i]['y'] > height) {
+      return false;
+    }
+  }
+  return true;
+  } 
+
+  function speakText(text){
+  const synth = window.speechSynthesis;
+  const utterance = new SpeechSynthesisUtterance(text);
+  synth.speak(utterance);
+  }
+
+  function areEarsCupped(ear, wrist) {
+    // Calculate the difference in x and y coordinates between the ear and the wrist
+    let xDiff = Math.abs(ear.x - wrist.x);
+    let yDiff = Math.abs(ear.y - wrist.y);
+
+    // Define a threshold for the maximum allowable difference in x and y coordinates
+    let xThreshold = 20;  
+    let yThreshold = 20;  
+
+    // If both x and y coordinate differences are less than the threshold, we consider the ear to be cupped
+    return (xDiff < xThreshold && yDiff < yThreshold);
+}
+
+
+
 
 </script>
 </html>

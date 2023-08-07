@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <title>ICA Prototype</title>
   <meta charset="utf-8">
@@ -16,45 +15,176 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="static/config.js"></script>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script>
+let mediaRecorder;
+let recordedChunks = [];
 
+function startRecording(stream) {
+    const options = { mimeType: "video/webm" };  
+    mediaRecorder = new MediaRecorder(stream, options);
+    mediaRecorder.ondataavailable = event => {
+        if (event.data.size > 0) {
+            recordedChunks.push(event.data);
+        }
+    };
+    mediaRecorder.onerror = function(event) {
+        console.error("MediaRecorder error: ", event);
+    };
+    mediaRecorder.start();
+}
+
+
+function stopRecording() {
+    mediaRecorder.stop();
+}
+
+function captureAndEncode() {
+    let videoElement;
+    if(document.getElementById('input_type').checked) {
+        videoElement = document.querySelector('.input_camera');
+        
+        const stream = videoElement.captureStream();
+        startRecording(stream);
+
+        // Example: Stop recording after 5 seconds and convert to base64
+        setTimeout(() => {
+            stopRecording();
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onload = function() {
+                saveBase64AsFile(reader.result, "captured_video.txt");
+            };
+        }, 60000);
+    } else {
+        videoElement = document.getElementById('input_file').files[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(videoElement);
+        reader.onload = function() {
+            saveBase64AsFile(reader.result, "uploaded_video.txt");
+        };
+    }
+}
+
+function saveBase64AsFile(base64, filename) {
+    const blobData = new Blob([base64], {type: "text/plain"});
+    const url = window.URL.createObjectURL(blobData);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+}
+
+
+  </script>
   <style>
-    /* Remove the navbar's default margin-bottom and rounded borders */
+    /* Remove the navbar's default margin-bottom and rounded borders */ 
     .navbar {
-      margin-bottom: 0;
-      border-radius: 0;
-    }
+  margin-bottom: 0;
+  border-radius: 0;
+  background-color: #1a1a1a;
+}
 
-    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
-    .row.content {
-      height: 450px
-    }
+.navbar-brand {
+  color: #f9f9f9;
+  font-size: 1.5em;
+}
 
-    /* Set gray background color and 100% height */
-    .sidenav {
-      padding-top: 20px;
-      background-color: #f1f1f1;
-      height: 100%;
-    }
+.navbar-nav > li > a {
+  color: #f9f9f9;
+}
 
-    /* Set black background color, white text and some padding */
-    footer {
-      background-color: #555;
-      color: white;
-      padding: 15px;
-    }
+.navbar-nav > li > a:hover {
+  color: #f1f1f1;
+  background-color: #333;
+}
 
-    /* On small screens, set height to 'auto' for sidenav and grid */
-    @media screen and (max-width: 767px) {
-      .sidenav {
-        height: auto;
-        padding: 15px;
-      }
+.navbar-nav > .active > a {
+  background-color: #333;
+}
 
-      .row.content {
-        height: auto;
-      }
-    }
+/* Content styling */
+.container-fluid {
+  padding: 2em;
+}
+
+.row.content {
+  height: auto;
+  margin-bottom: 2em;
+}
+
+.sidenav {
+  padding-top: 20px;
+  background-color: #f1f1f1;
+  height: 100%;
+  border-right: 1px solid #ddd;
+}
+
+.text-left {
+  padding: 2em;
+}
+
+/* Footer styling */
+footer {
+  background-color: #1a1a1a; 
+  color: white;
+  padding: 15px;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
+
+/* Modal styling */
+#modalContainer {
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+#durationModal {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%;
+  border-radius: 10px; 
+  box-shadow: 0 2px 5px rgba(0,0,0,.3);
+}
+
+/* Button styling */
+#okButton{
+  background-color: #4CAF50; /* Green background */
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  padding: 10px 24px;
+  transition-duration: 0.4s; /* Animation to change color */
+  border-radius: 12px; /* Rounded corners */
+}
+
+#okButton:hover {
+  background-color: #45a049; /* Darker green when mouse hovers over */
+}
+
+/* Responsive styling */
+@media screen and (max-width: 767px) {
+  .sidenav {
+    height: auto;
+    padding: 15px;
+  }
+  .row.content {height:auto;} 
+}
   </style>
 
 </head>
@@ -67,151 +197,94 @@
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>                        
         </button>
         <a class="navbar-brand" href="#">Intelligent Calisthenics Assistant (ICA) </a>
       </div>
       <div class="collapse navbar-collapse" id="myNavbar">
         <ul class="nav navbar-nav">
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-            <li><a href="/contact">Contact</a></li>
-            {% if session['sessID'] %}
-            <li><a href="/record">Record</a></li>
-            {% endif %}
-            <li><a href="/member">Member</a></li>
-            <li class="active"><a href="/push_up">Push Up</a></li>
-            <li><a href="/sit_up">Sit Up</a></li>
+          <li class="active"><a href="#">Home</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="/decode">Go to Base64 Decoder Page</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
-            {% if not session['sessID'] %}
-            <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
-            {% else %}
-            <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span>Logout</a></li>
-            <li><a href="/profile"><span class="glyphicon glyphicon-user"></span>Profile</a></li>
-            {% endif %}
+          <li><a href="#"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
         </ul>
-    </div>
+      </div>
     </div>
   </nav>
 
-  <div class="container-fluid text-center">
+  <div class="container-fluid text-center">    
     <div class="row content">
       <div class="col-sm-2 sidenav">
-        <p><a href="#">Project Team Members</a></p>
+        <p></p>
       </div>
-      <div class="col-sm-8 text-left">
+      <div class="col-sm-8 text-left"> 
         <br>
-
-        <div id="videoContainer">
-          <video id="video" width="640" height="480" autoplay></video>
-          <div id="countdown"></div>
+        
+        <div id="modalContainer" style="display:none;">
+          <div id="durationModal">
+            <p>Select your pushup session duration:</p>
+            <select id="durationSelect">
+              <option value="10">10 seconds</option>
+              <option value="20">20 seconds</option>
+              <option value="30">30 seconds</option>
+              <option value="60" selected>60 seconds</option>
+              <option value="120">120 seconds</option>
+            </select>
+            <button id="okButton">Ok</button>
+          </div>
         </div>
-        <button id="startButton">Start Recording</button>
-        <script>
-          var video = document.getElementById('video');
-          var countdown = document.getElementById('countdown');
-          var startButton = document.getElementById('startButton');
-          var audio = new Audio('audio/race-start-beeps-125125.mp3');
-          var recorder;
-
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function (stream) {
-              video.srcObject = stream;
-            })
-            .catch(function (error) {
-              console.log('Error:', error);
-            });
-
-          startButton.onclick = function () {
-            startButton.style.display = 'none';
-            countdown.style.display = 'block';
-            var count = 3;
-            countdown.innerHTML = count;
-            audio.play();
-            var countdownInterval = setInterval(function () {
-              if (count > 1) {
-                count--;
-                countdown.innerHTML = count;
-              } else if (count == 1) {
-                countdown.innerHTML = "Go";
-                setTimeout(function () {
-                  clearInterval(countdownInterval);
-                  countdown.style.display = 'none';
-                  startRecording();
-                }, 1000);
-                count--;
-              }
-            }, 1000);
-          };
-
-          function startRecording() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-              .then(function (stream) {
-                video.srcObject = stream;
-                recorder = new MediaRecorder(stream);
-                recorder.start();
-                setTimeout(stopRecording, 60000); // stop recording after 60 seconds
-              })
-              .catch(function (error) {
-                console.log('Error:', error);
-              });
-          }
-
-          function stopRecording() {
-            if (recorder && recorder.state !== 'inactive') {
-              recorder.stop();
-              video.srcObject = null;
-              startButton.style.display = 'block';
-            }
-          }
-
-        </script>
 
         <canvas class="output_canvas_1" width="320px" height="180px" style="width:49%; height:49%"></canvas>
-        <canvas class="output_canvas_2" id="output_canvas_2" width="320px" height="180px"
-          style="width:49%; height:49%"></canvas>
-        <input type="checkbox" id="input_type"> Camera?&nbsp&nbsp&nbsp
-        Video Position <select class="cam_pos" id="cam_pos">
+        <canvas class="output_canvas_2" id="output_canvas_2" width="320px" height="180px" style="display:none;"></canvas>
+        <br><input type="checkbox" id="input_type"> Camera?&nbsp&nbsp&nbsp
+        Video Position <select class="cam_pos" id="cam_pos"> 
           <option value="9" selected>9 o'clock</option>
           <option value="11">11</option>
           <option value="7">7</option>
         </select>
 
-        <input type="file" id="input_file" accept="video/*" /><br>
-        <video class="input_file" width="320px" height="180px" controls></video>
-        <video class="input_camera" autoplay="true" width="320px" height="180px"></video>
+        <input type="file" id="input_file" accept="video/*"/><br>
+        <!--New video export to base64 button-->
+        <button onclick="captureAndEncode()">Encode Video to Base64</button><br>
+        <video class="input_file" width="220px" height="180px" controls></video>
+        <video class="input_camera" autoplay="true" width="220px" height="180px"></video>
 
         <br>(P) of Correct Pose&nbsp&nbsp&nbsp<span id="UndisposedMem">Undisposed Mem: 0 MB</span>
         <input type="textarea" style="width:100%" id="poseResult" name="poseResult" readonly><br>
+        <!--Adding my export buttons here-->
+        <button id="exportButton">Export Data (Whole)</button>
+        <button id="exportButtonFormatted">Export Data (Last Input Formatted)</button>
+        <button id="submitJSON">Submit JSON to Database</button>
+        <br>
+        <div style="display:none">
         <br>Left Wrist (x)&nbsp<input type="textarea" style="width:20%" id="leftWrist" name="leftWrist" readonly>
-        &nbsp&nbsp&nbspRight Wrist (x)&nbsp</label><input type="textarea" style="width:20%" id="rightWrist"
-          name="rightWrist" readonly>
-
-        <br><br><button id="toggleSend" onclick="toggleSend()">Start Predict</button>
+        &nbsp&nbsp&nbspRight Wrist (x)&nbsp</label><input type="textarea" style="width:20%" id="rightWrist" name="rightWrist" readonly>
+        </div>
+        <br><button id="toggleSend" onclick="toggleSend()">Start Predict</button>
         Sampling Rate <input type="number" id="samplingRate" min="20" max="30" value="24">
-        Predict By <select class="predict_by" id="predict_by">
+        Predict By <select class="predict_by" id="predict_by"> 
           <option value="CNN" selected>CNN</option>
           <option value="angles">Angles</option>
         </select>
         <br><br>
+        
+        <canvas id="perfChart" style="max-width:100%; max-height:30%"></canvas><br>
+        <canvas id="pieChart" style="max-width:100%; max-height:30%"></canvas><br>
 
-        <canvas id="perfChart" style="max-width:100%; max-height:30%"></canvas>
-        <!-- <form action="/insert_vid" method="POST" enctype="multipart/form-data">
-          <input type="file" name="video" accept="video/*">
-          <input type="submit" value="Insert Video">
-        </form> -->
-        <button onclick="takeScreenshot()">Take Screenshot</button>
-        <form action="/insert" method="POST" enctype="multipart/form-data">
-          <input type="submit" value="Insert Record">
-        </form>
+        <!--Adding my export chart button here-->
+        <button id="exportChartButton">Export Chart</button>
+        <button id="exportBase64Button">Export Chart (In Base64 Encoding)</button>
+
       </div>
       <div class="col-sm-2 sidenav">
         <div class="well">
-          <p>Interested in this AD space? Contact .....</p>
+          <p></p>
         </div>
         <div class="well">
-          <p>Interested in this AD space? Contact .....</p>
+          <p></p>
         </div>
       </div>
     </div>
@@ -225,27 +298,35 @@
 </body>
 
 <script>
-  function takeScreenshot() {
-    html2canvas(document.body).then(function (canvas) {
-      // Convert canvas to image data URL
-      var dataURL = canvas.toDataURL('image/png');
+//**Setting variables as false first. 
+let hasSpoken = false; 
+let isBackStraightAlready = false;
+let isArmStraightAlready = false;
+var hasFormBeenCorrect = false;
 
-      // Create a temporary link element to download the screenshot
-      var link = document.createElement('a');
-      link.href = dataURL;
-      link.download = 'screenshot.png'; // Set the filename for the screenshot
-      link.click(); // Trigger the download
-    });
-  }
+// Disable the button so the program can only do it manually. 
+document.getElementById("toggleSend").disabled = true;
+
+//** POP up requesting for configurable period for pushup duration
+window.onload = function(){
+  document.getElementById('modalContainer').style.display = 'block';
+}
+
+document.getElementById('okButton').addEventListener('click', function() {
+  var selectedDuration = document.getElementById('durationSelect').value;
+  localStorage.setItem('selectedDuration', selectedDuration);
+  document.getElementById('modalContainer').style.display = 'none';
+});
+
   // By default, push_ups and 9 oc positions
   var exercise = exercises.find(exercise => exercise.type === "push_up" &&
     exercise.cam_pos === "9oc");
-
-  var poseModel_1, poseModel_2, oldPoseModel, flowModel, neg_emb_1, pos_emb_1, neg_emb_2, pos_emb_2;
+ 
+  var poseModel_1,  poseModel_2, oldPoseModel, flowModel, neg_emb_1, pos_emb_1, neg_emb_2, pos_emb_2;
   var frameCount = 0, exCount = 0, goodCount = 0, badCount = 0, max_angle = 0, min_angle = 150,
-    perfChart = null, currPoseModel = "9", prevShoulderY = 0, currShoulderY = 0;
+    perfChart = null, pieChart = null, currPoseModel = "9", prevShoulderY = 0, currShoulderY = 0;
   // 150 is just an arbitarily large number
-  var prevAPF = { angle: 0, pose: "", flow: "" };
+  var prevAPF = {angle:0, pose:"", flow:""};
   var last5PosePredict = [], flowClassifyResults = "";
   var cam_pos = document.getElementById('cam_pos');
   cam_pos.addEventListener('change', switchPoseModel);
@@ -311,7 +392,7 @@
     // poseResults_1 = await poseModel_1.predict(t_array).data();
     // poseResults_1 = await oldPoseModel.predict(t_array).data();
     poseResults_1 = await oldPoseModel.predict([t_imagePoseOnly, t_angles]).data();
-    return ([poseResults_1]);
+    return([poseResults_1]);
 
     /* let avgNegSim_1 = 0, avgPosSim_1 = 0;
     avgNegSim_1 = avgCosineSim(poseResults_1, neg_emb_1);
@@ -326,12 +407,12 @@
     let imagePoseOnly = document.getElementsByClassName('output_canvas_1')[0];
 
     let imageOrig = null;
-    const inputType = document.querySelector('#input_type');
+    const inputType = document.querySelector('#input_type'); 
     const videoElementFile = document.getElementsByClassName('input_file')[0];
     const videoElementCamera = document.getElementsByClassName('input_camera')[0];
-
+    
     if (inputType.checked)
-      imageOrig = videoElementCamera;
+      imageOrig =  videoElementCamera;
     else
       imageOrig = videoElementFile;
 
@@ -351,7 +432,7 @@
     avgNegSim_2 = avgCosineSim(poseResults_2, neg_emb_2);
     avgPosSim_2 = avgCosineSim(poseResults_2, pos_emb_2);
 
-    console.log("AVE (Model II) +/- " + avgPosSim_2 + " " + avgNegSim_2);
+    console.log ("AVE (Model II) +/- " + avgPosSim_2 + " " + avgNegSim_2);
 
     return ([avgPosSim_2, avgNegSim_2]);
   }
@@ -361,12 +442,12 @@
     let t_imageFlowOnly = tf.browser.fromPixels(imageFlowOnly)
       .resizeNearestNeighbor([180, 320]).toFloat().div(tf.scalar(255)).expandDims();
     let flowResult = await flowModel.predict(t_imageFlowOnly).data();
-    let max = -1, max_i, movtDir;
+    let max=-1, max_i, movtDir;
 
-    flowResult.forEach((element, index) => {
+    flowResult.forEach((element, index) => { 
       if (max < element) {
-        max = element;
-        max_i = index;
+        max = element;   
+        max_i = index; 
       }
     });
 
@@ -390,7 +471,7 @@
   }
 
   // load the correct model based on cam position
-  function switchPoseModel() {
+  function switchPoseModel () {
     if (this.value != currPoseModel) {
       let newModelToLoad = "static/models/pushup-pose_".concat(
         this.value).concat("oc/model.json");
@@ -400,7 +481,7 @@
         currPoseModel = this.value;
       })();
       exercise = exercises.find(exercise => exercise.type === "push_up" &&
-        exercise.cam_pos === this.value.concat("oc"));
+      exercise.cam_pos === this.value.concat("oc"));
     }
   }
 
@@ -408,13 +489,13 @@
     let dotProduct = 0, mA = 0, mB = 0;
 
     for (let i = 0; i < A.length; i++) {
-      dotProduct += (A[i] * B[i]);
-      mA += (A[i] * A[i]);
-      mB += (B[i] * B[i]);
+        dotProduct += (A[i] * B[i]);
+        mA += (A[i]*A[i]);
+        mB += (B[i]*B[i]);
     }
     mA = Math.sqrt(mA);
     mB = Math.sqrt(mB);
-    return (dotProduct) / ((mA) * (mB));
+    return (dotProduct)/((mA)*(mB));
   }
 
   function avgCosineSim(A, B) {
@@ -422,40 +503,40 @@
     for (let i = 0; i < B.length; i++) {
       totalCosSim += cosineSim(A, B[i]);
     }
-    return (totalCosSim / B.length);
+    return (totalCosSim/B.length);
   }
 </script>
 
 <script async src="https://docs.opencv.org/4.5.2/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 <script type="text/javascript">
   var cap, frame2, prvs, hsv0, hsv1, hsv2, hsvVec, frame2, flow, flowVec, next,
-    mag, ang, rgb, OpenCvReady = false;
+      mag, ang, rgb, OpenCvReady = false;
 
   function resetOpenCv(videoElement) {
-    cap = new cv.VideoCapture(videoElement);
-    // take first frame of the video
-    frame1 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC4);
-    cap.read(frame1);
+      cap = new cv.VideoCapture(videoElement);
+      // take first frame of the video
+      frame1 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC4);
+      cap.read(frame1);
 
-    prvs = new cv.Mat();
-    cv.cvtColor(frame1, prvs, cv.COLOR_RGBA2GRAY);
-    frame1.delete();
-    hsv = new cv.Mat();
-    hsv0 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
-    hsv1 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1, new cv.Scalar(255));
-    hsv2 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
-    hsvVec = new cv.MatVector();
-    hsvVec.push_back(hsv0); hsvVec.push_back(hsv1); hsvVec.push_back(hsv2);
+      prvs = new cv.Mat();
+      cv.cvtColor(frame1, prvs, cv.COLOR_RGBA2GRAY);
+      frame1.delete();
+      hsv = new cv.Mat();
+      hsv0 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      hsv1 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1, new cv.Scalar(255));
+      hsv2 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      hsvVec = new cv.MatVector();
+      hsvVec.push_back(hsv0); hsvVec.push_back(hsv1); hsvVec.push_back(hsv2);
 
-    frame2 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC4);
-    next = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
-    flow = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC2);
-    flowVec = new cv.MatVector();
-    mag = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC1);
-    ang = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC1);
-    rgb = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC3);
+      frame2 = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC4);
+      next = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC1);
+      flow = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC2);
+      flowVec = new cv.MatVector();
+      mag = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC1);
+      ang = new cv.Mat(videoElement.height, videoElement.width, cv.CV_32FC1);
+      rgb = new cv.Mat(videoElement.height, videoElement.width, cv.CV_8UC3);
 
-    OpenCvReady = true;
+      OpenCvReady = true;
   }
   function onOpenCvReady() {
     cv['onRuntimeInitialized'] = () => {
@@ -465,8 +546,8 @@
   }
   function drawFlow() {
     try {
-      let begin = performance.now();
-      if (OpenCvReady) {
+        let begin = performance.now();
+        if (OpenCvReady) {
         cap.read(frame2);
         cv.cvtColor(frame2, next, cv.COLOR_RGBA2GRAY);
         cv.calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
@@ -475,19 +556,19 @@
         let v = flowVec.get(1);
         cv.cartToPolar(u, v, mag, ang);
         u.delete(); v.delete();
-        ang.convertTo(hsv0, cv.CV_8UC1, 180 / Math.PI / 2);
+        ang.convertTo(hsv0, cv.CV_8UC1, 180/Math.PI/2);
         cv.normalize(mag, hsv2, 0, 255, cv.NORM_MINMAX, cv.CV_8UC1);
         cv.merge(hsvVec, hsv);
         cv.cvtColor(hsv, rgb, cv.COLOR_HSV2RGB);
         cv.imshow('output_canvas_2', rgb);
         next.copyTo(prvs);
-      }
+        }
 
-      // schedule the next one.
-      // let delay = 1000/parseFloat(document.getElementById('samplingRate').value) - (performance.now() - begin);
-      // setTimeout(drawFlow, delay);
+        // schedule the next one.
+        // let delay = 1000/parseFloat(document.getElementById('samplingRate').value) - (performance.now() - begin);
+        // setTimeout(drawFlow, delay);
     } catch (err) {
-      console.log(err);
+        console.log(err);
     }
   }
   // setTimeout is to schedule the next function call to draw the flow
@@ -507,14 +588,14 @@
   var lastSent = performance.now();
 
   // This is to calculate angles spread horizontally, e.g. Shoulder-Hip-Knee
-  function calculateAngle_1(a, b, c) {
+  function calculateAngle_1 (a, b, c) {
     let arctan_1 = 0, arctan_2 = 0, angle_1 = 0, angle_2 = 0,
       angle_between_1_2 = 0;
 
     arctan_1 = Math.atan2(a[1] - b[1], a[0] - b[0]);
     arctan_2 = Math.atan2(c[1] - b[1], c[0] - b[0]);
-    angle_1 = arctan_1 * 180 / Math.PI;
-    angle_2 = arctan_2 * 180 / Math.PI;
+    angle_1 = arctan_1 * 180/Math.PI;
+    angle_2 = arctan_2 * 180/Math.PI;
 
     // For easy tracking, convert all to +ive angles first
     if (angle_1 < 0)
@@ -526,37 +607,37 @@
       angle_between_1_2 = angle_2 - angle_1;
     if (a[1] < b[1])
       angle_between_1_2 = angle_2 + (360 - angle_1);
-
+    
     return angle_between_1_2;
   }
 
-  // This is to calculate angles spread vertically, e.g. Shoulder-Elbow-Wrist
-  function calculateAngle_2(a, b, c, view = "Right") {
-    let arctan_1 = 0, arctan_2 = 0, angle_1 = 0, angle_2 = 0,
-      angle_between_1_2 = 0;
+// This is to calculate angles spread vertically, e.g. Shoulder-Elbow-Wrist
+function calculateAngle_2 (a, b, c, view = "Right") {
+  let arctan_1 = 0, arctan_2 = 0, angle_1 = 0, angle_2 = 0,
+    angle_between_1_2 = 0;
 
-    arctan_1 = Math.atan2(a[1] - b[1], a[0] - b[0]);
-    arctan_2 = Math.atan2(c[1] - b[1], c[0] - b[0]);
-    angle_1 = arctan_1 * 180 / Math.PI;
-    angle_2 = arctan_2 * 180 / Math.PI;
+  arctan_1 = Math.atan2(a[1] - b[1], a[0] - b[0]);
+  arctan_2 = Math.atan2(c[1] - b[1], c[0] - b[0]);
+  angle_1 = arctan_1 * 180/Math.PI;
+  angle_2 = arctan_2 * 180/Math.PI;
 
-    // For easy tracking, convert all to +ive angles first
-    if (angle_1 < 0)
-      angle_1 = 360 - Math.abs(angle_1);
-    if (angle_2 < 0)
-      angle_2 = 360 - Math.abs(angle_2);
+  // For easy tracking, convert all to +ive angles first
+  if (angle_1 < 0)
+    angle_1 = 360 - Math.abs(angle_1);
+  if (angle_2 < 0)
+    angle_2 = 360 - Math.abs(angle_2);
 
-    if (view == 'Left')
-      angle_between_1_2 = angle_2 - angle_1;
-    else if (view == 'Right') {
-      if (a[1] >= b[1])
-        angle_between_1_2 = 360 - (angle_2 - angle_1);
-      if (a[1] < b[1])
-        angle_between_1_2 = angle_1 - angle_2;
-    }
-
-    return angle_between_1_2;
+  if (view == 'Left')
+    angle_between_1_2 = angle_2 - angle_1;
+  else if (view == 'Right') {
+    if (a[1] >= b[1])
+      angle_between_1_2 = 360 - (angle_2 - angle_1);
+    if (a[1] < b[1])
+      angle_between_1_2 = angle_1 - angle_2;
   }
+
+  return angle_between_1_2;
+ }
   /* function calculateAngle (a, b, c, reverse = true) {
     let A = Math.pow(b[0] - a[0], 2) + Math.pow(b[1] - a[1], 2),
       B = Math.pow(b[0] - c[0], 2) + Math.pow(b[1] - c[1], 2),
@@ -571,14 +652,14 @@
 
   function onResults(results) {
     frameCount++;
-    console.log("Frame %f", frameCount);
+    console.log ("Frame %f", frameCount);
 
     canvasCtx.save();
     /* canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.fillStyle = "black";
     canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height); */
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-
+    
     // The following three draw functions are replaced with customised logic
     /* canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
     drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
@@ -610,36 +691,37 @@
     }
     for (let i = 0; i < results.poseLandmarks.length; i++) {
       if (results.poseLandmarks[i]['z'] > max_z)
-        max_z = results.poseLandmarks[i]['z'];
+        max_z = results.poseLandmarks[i]['z'];     
     }
     for (let i = 0; i < results.poseLandmarks.length; i++) {
-      results.poseLandmarks[i]['z'] = results.poseLandmarks[i]['z'] / max_z;
+     results.poseLandmarks[i]['z'] = results.poseLandmarks[i]['z'] / max_z;     
     }
     // End of scale Z to between 0 and 1
 
     // convert X, Y landmarks to pixel position
     let x_px, y_px;
     for (let i = 0; i < results.poseLandmarks.length; i++) {
-      x_px = Math.min(Math.floor(results.poseLandmarks[i]['x'] * canvasElement.width),
+      x_px = Math.min(Math.floor(results.poseLandmarks[i]['x'] * canvasElement.width), 
         canvasElement.width - 1);
       y_px = Math.min(Math.floor(results.poseLandmarks[i]['y'] * canvasElement.height),
-        canvasElement.height - 1);
-      idx_to_coordinates.push({ "x": x_px, "y": y_px, "z": results.poseLandmarks[i]['z'] });
+        canvasElement.height- 1);
+      idx_to_coordinates.push({"x": x_px,"y": y_px, "z": results.poseLandmarks[i]['z']});
     }
     // End of convert X, Y landmarks to pixel position
 
     // Determine if subject is facing right or left
-    let pose_of_interests_right_view = [12, 24, 26, 28],
-      pose_of_interests_left_view = [11, 23, 25, 27];
+    //**Add elbow and wrist posepoints.
+    let pose_of_interests_right_view = [12, 14, 16, 24, 26, 28],
+      pose_of_interests_left_view = [11, 13, 15, 23, 25, 27];
     let pose_of_interests = [], pose_view = '';
     if (idx_to_coordinates[0]['x'] > idx_to_coordinates[11]['x'] ||
       idx_to_coordinates[0]['x'] > idx_to_coordinates[12]['x']) {
-      pose_of_interests = pose_of_interests_right_view;
-      pose_view = 'Right';
+        pose_of_interests = pose_of_interests_right_view;
+        pose_view = 'Right';
     } else if (idx_to_coordinates[0]['x'] < idx_to_coordinates[11]['x'] ||
       idx_to_coordinates[0]['x'] < idx_to_coordinates[12]['x']) {
-      pose_of_interests = pose_of_interests_left_view;
-      pose_view = 'Left';
+        pose_of_interests = pose_of_interests_left_view;
+        pose_view = 'Left';
     }
 
     // Draw the connections
@@ -649,14 +731,14 @@
       start_idx = POSE_CONNECTIONS[i][0];
       end_idx = POSE_CONNECTIONS[i][1];
 
-      if (pose_of_interests.includes(start_idx) &&
+      if (pose_of_interests.includes(start_idx) && 
         pose_of_interests.includes(end_idx)) {
         pt_1_x = idx_to_coordinates[start_idx]['x'];
         pt_1_y = idx_to_coordinates[start_idx]['y'];
         pt_2_x = idx_to_coordinates[end_idx]['x'];
         pt_2_y = idx_to_coordinates[end_idx]['y'];
-        z_1 = idx_to_coordinates[start_idx]['z'];
-        z_2 = idx_to_coordinates[end_idx]['z'];
+        z_1 =  idx_to_coordinates[start_idx]['z'];
+        z_2 =  idx_to_coordinates[end_idx]['z'];
 
         if (z_1 < 0.5 || z_2 < 0.5)
           thickness = 4;
@@ -667,7 +749,7 @@
         canvasCtx.lineWidth = thickness;
         canvasCtx.moveTo(pt_1_x, pt_1_y);
         canvasCtx.lineTo(pt_2_x, pt_2_y);
-
+        
         if (start_idx <= 10)
           canvasCtx.strokeStyle = 'rgb(0,255,0)';
         else if (start_idx > 10 && start_idx < 23)
@@ -685,8 +767,8 @@
       if (radius <= 1)
         radius = 2;
       canvasCtx.beginPath();
-      canvasCtx.arc(idx_to_coordinates[i]['x'], idx_to_coordinates[i]['y'],
-        radius, 0, Math.PI * 2);
+      canvasCtx.arc(idx_to_coordinates[i]['x'], idx_to_coordinates[i]['y'], 
+        radius, 0, Math. PI * 2);
       if (pose_of_interests.includes(i)) {
         if (i <= 10) {
           canvasCtx.fillStyle = 'rgb(255,0,0)';
@@ -700,7 +782,7 @@
         }
         canvasCtx.fill();
         canvasCtx.stroke();
-
+        
       }
     }
 
@@ -708,11 +790,11 @@
     var left, right = "";
     right = JSON.stringify(results.poseLandmarks[16]['x'].toPrecision(2)) + ' (' +
       JSON.stringify(results.poseLandmarks[16]['visibility'].toPrecision(2)) + ')';
-    right = right.replace(/\"/g, "");
+    right = right.replace(/\"/g,"");
     document.getElementById("rightWrist").value = right;
     left = JSON.stringify(results.poseLandmarks[15]['x'].toPrecision(2)) + ' (' +
       JSON.stringify(results.poseLandmarks[15]['visibility'].toPrecision(2)) + ')';
-    left = left.replace(/\"/g, "");
+    left = left.replace(/\"/g,"");
     document.getElementById("leftWrist").value = left;
     document.getElementById("pose_results").innerHTML = JSON.stringify(results.poseLandmarks);
 
@@ -734,7 +816,7 @@
       ankle_pose_idx = 28;
     }
 
-    let shoulder = [], elbow = [], wrist = [], angle = 0;
+    let shoulder=[], elbow=[], wrist=[], angle = 0;
     shoulder = [idx_to_coordinates[shoulder_pose_idx]['x'], canvasElement.height - idx_to_coordinates[shoulder_pose_idx]['y']];
     elbow = [idx_to_coordinates[elbow_pose_idx]['x'], canvasElement.height - idx_to_coordinates[elbow_pose_idx]['y']];
     wrist = [idx_to_coordinates[wrist_pose_idx]['x'], canvasElement.height - idx_to_coordinates[wrist_pose_idx]['y']];
@@ -767,12 +849,70 @@
     else
       angle_hka = calculateAngle_1(hip, knee, ankle);
 
+  setTimeout(() => {
+    //**User form checker
+    if(!checkPosePointsInFrame(idx_to_coordinates,canvasElement.width, canvasElement.height)){
+      speakText("Not in frame!");
+      return;
+    } else {  
+      //Condition check for user's back straightness & arm**
+      if(!isBackStraightAlready){
+        //Back Straightness
+        let shoulder_coordinates = idx_to_coordinates[shoulder_pose_idx]; 
+        let hip_coordinates = idx_to_coordinates[hip_pose_idx]; 
+        let backStraight = checkBackStraightness(shoulder_coordinates, hip_coordinates);
+        //Arm Straightness
+        let elbow_coordinates = idx_to_coordinates[elbow_pose_idx];
+        let wrist_coordinates = idx_to_coordinates[wrist_pose_idx];
+        let armStraight = checkArmStraightness(shoulder_coordinates, elbow_coordinates, wrist_coordinates);
+
+        if(!backStraight){
+          speakText('Back is still not straight!..,');
+          return;
+        }else if(!armStraight){
+          speakText('Arm is still not straight!..,');
+          return;
+        }else{
+          if(!hasSpoken){
+            // Enable the button
+            document.getElementById("toggleSend").disabled = false;
+            speakText("3, 2, 1, Go!");
+            hasSpoken = true;
+          }
+          isBackStraightAlready = true;
+
+          //**Automatically start predicting once the user's form is correct. 
+          if(!hasFormBeenCorrect){
+            hasFormBeenCorrect = true;
+            //**Set a buffer time to compensate for the spoken countdown timer
+            setTimeout(function(){
+            document.getElementById('toggleSend').click();
+            },3000);
+          }
+        //** Countdown to stop the program after X amount of seconds set by the user.
+        const videoElement = document.querySelector('.input_file');
+        var countdownValue = localStorage.getItem('selectedDuration');
+        var countdownInterval = setInterval(function() {
+          //-2 to compensate for the 2 second delay 
+          if (countdownValue <= -2) {
+            clearInterval(countdownInterval);
+            speakText("Stop!");
+            document.getElementById('toggleSend').click();
+            videoElement.pause();
+          } else {
+            countdownValue--;
+          }
+        }, 1000);
+      }
+    }  
+
+
     // Predict according to the sampling rate
     var timeInterval = 1000 / parseFloat(document.getElementById('samplingRate').value);
     if (document.getElementById('toggleSend').innerHTML == "Stop Predict") {
       if (performance.now() - lastSent >= timeInterval) {
         lastSent = performance.now();
-        tf.tidy(() => {
+        tf.tidy (() => {
           let pose1Predict = classifyPose_1(angle_shk, angle_hka);
           // let pose2Predict = classifyPose_2();
           let flowPredict = classifyFlow();
@@ -805,8 +945,8 @@
             else
               flowClassifyResults = "No Movement";
 
-            console.log("Frame/Good/Bad/Dir %f / %f / %f  / %s ", frameCount, goodProb, badProb, flowClassifyResults);
-            if (goodProb >= badProb)
+            console.log ("Frame/Good/Bad/Dir %f / %f / %f  / %s ", frameCount, goodProb, badProb, flowClassifyResults);
+            if (goodProb >= badProb) 
               outcome = "Good";
             else
               outcome = "Bad";
@@ -825,19 +965,19 @@
             }
 
             // record the last 5 predicts
-            last5PosePredict.push({
-              "outcome": outcome, "good_probability": goodProb,
-              "bad_probability": badProb
-            });
+            last5PosePredict.push({"outcome": outcome, "good_probability": goodProb,
+              "bad_probability": badProb});
 
             if (last5PosePredict.length == 6)
-              last5PosePredict.shift();
+                last5PosePredict.shift();
           });
         });
 
-        document.getElementById("UndisposedMem").innerHTML = "Undisposed Mem:" + (tf.memory().numBytes / (1024 * 1024)).toFixed(1) + " MB";
+        document.getElementById("UndisposedMem").innerHTML = "Undisposed Mem:" + (tf.memory().numBytes/ (1024 * 1024)).toFixed(1) + " MB";
       }
     }
+  }
+},3000);
 
     let userAdvice = "";
 
@@ -860,14 +1000,14 @@
       prevAPF.angle = angle;
       prevAPF.pose = "N.A.";
       prevAPF.flow = flowClassifyResults + " Arms fully bent";
-    } else if (angle > exercise.down_angle && (flowClassifyResults == "Down" ||
-      flowClassifyResults == "No Movement")) {
+    } else if (angle > exercise.down_angle && (flowClassifyResults == "Down" || 
+        flowClassifyResults == "No Movement")) {
       if (max_angle <= exercise.up_angle) { // Not fully straighten
         exCount++;
         badCount++;
         // max_angle = 999; // to prevent duplicate triggerring
         userAdvice = "Arms not straight";
-        updatePerfChart(false, userAdvice);
+        updatePerfChart (false, userAdvice);
         perfChart.update();
       }
       max_angle = 999 // to prevent duplicate trigger and to indicate the check has been made
@@ -875,20 +1015,20 @@
       prevAPF.pose = "N.A.";
       prevAPF.flow = flowClassifyResults + " Arms not fully bent";
     } else if (angle > exercise.down_angle && (flowClassifyResults == "Up" ||
-      flowClassifyResults == "No Movement")) {
+        flowClassifyResults == "No Movement")) {
       if (min_angle < 150 && angle >= exercise.up_angle) { // changed 06-Jan-22
         exCount++;
         // console.log("Last 5 predicts " + JSON.stringify(last5PosePredict));
         let numValidPose = 0;
         for (let i = 0; i < last5PosePredict.length; i++) {
-          if (last5PosePredict[i].outcome == "Good") {
-            numValidPose++;
-          }
+            if(last5PosePredict[i].outcome == "Good") {
+              numValidPose++;
+            }
         }
         console.log("Num of valids in last 5 " + numValidPose);
         if (numValidPose >= 3 && min_angle <= exercise.down_angle) {
           goodCount++;
-          updatePerfChart(true, "Good");
+          updatePerfChart (true, "Good");
           perfChart.update();
         } else {
           badCount++;
@@ -897,7 +1037,7 @@
           }
           if (min_angle > exercise.down_angle)
             userAdvice = userAdvice + " Arms not fully bent";
-          updatePerfChart(false, userAdvice.trim());
+          updatePerfChart (false, userAdvice.trim());
           perfChart.update();
         }
         min_angle = 150; // reset to prevent duplicate triggerring
@@ -907,9 +1047,9 @@
       }
     } else if (angle < exercise.up_angle && (flowClassifyResults == "Up" || // changed 06-Jan-22
       flowClassifyResults == "No Movement")) {
-      prevAPF.angle = angle;
-      prevAPF.pose = "";
-      prevAPF.flow = flowClassifyResults + " Arms not straight";
+        prevAPF.angle = angle;
+        prevAPF.pose = "";
+        prevAPF.flow = flowClassifyResults + " Arms not straight";
     }
     canvasCtx.restore();
     canvasCtx.fillStyle = "white";
@@ -928,26 +1068,204 @@
     console.log("Total: " + exCount + ", Good: " + goodCount + ", Bad: " + badCount +
       ", SHK: " + Math.round(angle_shk) + ", HKA: " + Math.round(angle_hka) +
       ", SEW: " + Math.round(angle) + ", Max: " + Math.round(max_angle) +
-      ", Min: " + Math.round(min_angle) + " / " + userAdvice);
+      ", Min: " + Math.round(min_angle) +  " / " + userAdvice);
 
     canvasCtx.fillText("Total: " + exCount + ", Good: " + goodCount + ", Bad: " + badCount +
       ", SHK: " + Math.round(angle_shk) + ", HKA: " + Math.round(angle_hka) +
       ", SEW: " + Math.round(angle) + ", Max " + + Math.round(max_angle) +
-      ", Min " + Math.round(min_angle), 5, 15);
-    canvasCtx.fillText("User Advice: " + userAdvice, 5, 25);
+      ", Min " + Math.round(min_angle),5, 15);
+    canvasCtx.fillText ("User Advice: " + userAdvice, 5, 25);
 
     document.getElementById("poseResult").value = "Total: " + exCount + ", Good: " +
       goodCount + ", Bad: " + badCount + ", SHK: " + Math.round(angle_shk) +
-      ", HKA: " + Math.round(angle_hka) + ", SEW " + Math.round(angle) + ", Max: " +
-      Math.round(max_angle) + ", Min, " + Math.round(min_angle) + " / " + userAdvice;
+      ", HKA: " + Math.round(angle_hka) +", SEW " + Math.round(angle) + ", Max: " + 
+      Math.round(max_angle) + ", Min, " + Math.round(min_angle) +" / " + userAdvice;
   }
 
-  function setUpMediaPose() {
-    let pose = new Pose({
-      locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-      }
+//Hail mary data export
+
+// Get the poseResult element and the export button
+const poseResultElement = document.getElementById("poseResult");
+const exportButton = document.getElementById("exportButton");
+
+let data = []; // keep this outside of the function
+
+function exportDataToJSONFile() {
+    let poseResultValue = poseResultElement.value.split(', ');
+
+    // Extract each parameter from the string
+    let total = parseInt(poseResultValue[0].split(': ')[1]);
+    let good = parseInt(poseResultValue[1].split(': ')[1]);
+    let bad = parseInt(poseResultValue[2].split(': ')[1]);
+    let shk = parseInt(poseResultValue[3].split(': ')[1]);
+    let hka = parseInt(poseResultValue[4].split(': ')[1]);
+    let sew = parseInt(poseResultValue[5].split(' ')[1]); // Assuming "SEW 152" follows after ", "
+    let max = parseInt(poseResultValue[6].split(': ')[1]);
+    let min = parseInt(poseResultValue[7].split(': ')[1]); // Assuming "Min: 77" follows after ", "
+    let advice = poseResultValue[8] ? poseResultValue[8].split(' / ')[1] : ""; // If exists, split by ' / '
+
+    const instance = {
+        Total: total,
+        Good: good,
+        Bad: bad,
+        SHK: shk,
+        HKA: hka,
+        SEW: sew,
+        Max: max,
+        Min: min,
+        Advice: advice,
+        exercise: "Push Ups",
+        Timestamp: new Date().toISOString()
+    };
+
+    data.push(instance); // Push each instance into the data array
+}
+
+function downloadData() {
+    // Convert data to JSON string
+    const jsonData = JSON.stringify(data, null, 2);
+
+    // Create a Blob object with the data
+    const blob = new Blob([jsonData], { type: "application/json" });
+
+    // Create a download link
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "poseResult.JSON";
+    link.click();
+}
+
+// Call exportDataToJSONFile every 2000 milliseconds
+setInterval(exportDataToJSONFile, 2000);
+
+// Add an event listener that calls downloadData when the exportButton is clicked
+exportButton.addEventListener("click", downloadData);
+
+// Get the new button
+const exportButtonFormatted = document.getElementById("exportButtonFormatted");
+
+function exportLastDataToJSONFile() {
+    let poseResultValue = poseResultElement.value.split(', ');
+
+    // Extract each parameter from the string
+    let total = parseInt(poseResultValue[0].split(': ')[1]);
+    let good = parseInt(poseResultValue[1].split(': ')[1]);
+    let bad = parseInt(poseResultValue[2].split(': ')[1]);
+    let shk = parseInt(poseResultValue[3].split(': ')[1]);
+    let hka = parseInt(poseResultValue[4].split(': ')[1]);
+    let sew = parseInt(poseResultValue[5].split(' ')[1]); // Assuming "SEW 152" follows after ", "
+    let max = parseInt(poseResultValue[6].split(': ')[1]);
+    let min = parseInt(poseResultValue[7].split(': ')[1]); // Assuming "Min: 77" follows after ", "
+    let advice = poseResultValue[8] ? poseResultValue[8].split(' / ')[1] : ""; // If exists, split by ' / '
+
+    var canvas = document.getElementById('perfChart');  // Select the canvas with your chart
+    var chartBase64 = canvas.toDataURL('image/png');   // Get chart as a base64 string
+
+    // Remove the data URI scheme from the base64 string
+    chartBase64 = chartBase64.replace('data:image/png;base64,', '');
+    var chartBlob = base64ToBlob(chartBase64, 'image/png');
+
+    const instance = {
+        badcount: bad,
+        chartBase64: chartBase64,
+        date: new Date().toISOString(),
+        excount: total,
+        exercise: "Sit Ups",
+        goodcount: good
+    };
+
+    // Create a new array and push the last instance into it
+    let lastData = [];
+    lastData.push(instance);
+
+    // Convert lastData to JSON string
+    const jsonData = JSON.stringify(lastData, null, 2);
+
+    // Create a Blob object with the lastData
+    const blob = new Blob([jsonData], { type: "application/json" });
+
+    // Create a download link
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "LastPoseResult.JSON";
+    link.click();
+}
+
+// Add an event listener that calls exportLastDataToJSONFile when the exportButtonFormatted is clicked
+exportButtonFormatted.addEventListener("click", exportLastDataToJSONFile);
+
+const submitButton = document.getElementById("submitJSON");
+
+function submitButtonJSON() {
+    let poseResultValue = poseResultElement.value.split(', ');
+
+    // Extract each parameter from the string
+    let total = parseInt(poseResultValue[0].split(': ')[1]);
+    let good = parseInt(poseResultValue[1].split(': ')[1]);
+    let bad = parseInt(poseResultValue[2].split(': ')[1]);
+    let shk = parseInt(poseResultValue[3].split(': ')[1]);
+    let hka = parseInt(poseResultValue[4].split(': ')[1]);
+    let sew = parseInt(poseResultValue[5].split(' ')[1]); // Assuming "SEW 152" follows after ", "
+    let max = parseInt(poseResultValue[6].split(': ')[1]);
+    let min = parseInt(poseResultValue[7].split(': ')[1]); // Assuming "Min: 77" follows after ", "
+    let advice = poseResultValue[8] ? poseResultValue[8].split(' / ')[1] : ""; // If exists, split by ' / '
+
+    var canvas = document.getElementById('perfChart');  // Select the canvas with your chart
+    var chartBase64 = canvas.toDataURL('image/png');   // Get chart as a base64 string
+
+    // Remove the data URI scheme from the base64 string
+    chartBase64 = chartBase64.replace('data:image/png;base64,', '');
+    var chartBlob = base64ToBlob(chartBase64, 'image/png');
+
+    const instance = {
+        badcount: bad,
+        chartBase64: chartBase64,
+        date: new Date().toISOString(),
+        excount: total,
+        exercise: "Sit Ups",
+        goodcount: good
+    };
+
+    // Create a new array and push the last instance into it
+    let lastData = [];
+    lastData.push(instance);
+
+    // Convert lastData to JSON string
+    const jsonData = JSON.stringify(lastData, null, 2);
+
+    // Send the jsonData to the server using a POST request
+    $.ajax({
+        type: "POST",
+        url: "/export",
+        data: jsonData,
+        contentType: "application/json",
+        success: function(response) {
+            alert("Data sent to server successfully");
+        },
+        error: function(error) {
+            alert("There was an error sending the data to the server");
+        }
     });
+}
+
+submitButton.addEventListener("click", submitButtonJSON);
+
+function base64ToBlob(base64, mimeType) {
+    var byteCharacters = atob(base64);
+    var byteNumbers = new Array(byteCharacters.length);
+    for (var i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    var byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], {type: mimeType});
+}
+
+//End of Hail mary data export
+
+  function setUpMediaPose() {
+    let pose =  new Pose({locateFile: (file) => {
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+    }});
     pose.setOptions({
       modelComplexity: 1,
       smoothLandmarks: true,
@@ -964,7 +1282,7 @@
       return;
 
     // send the frame to pose, wait and do it again recursively
-    await videoPose.send({ image: videoElement });
+    await videoPose.send({image: videoElement});
     setTimeout(() => {
       timerCallback(videoElement, videoPose);
     }, 0);
@@ -974,7 +1292,7 @@
     var file = this.files[0];
     videoElementFile.src = URL.createObjectURL(file);
   }
-
+   
   var inputFile = document.querySelector('#input_file');
   inputFile.addEventListener('change', playSelectedFile, false);
 
@@ -982,29 +1300,33 @@
     frameCount = 0, exCount = 0, goodCount = 0, badCount = 0, max_angle = 0, min_angle = 150
     last5PosePredict = [], flowClassifyResults = "", prevShoulderY = 0, currShoulderY = 0;
     if (typeof perfChart === "undefined" || perfChart != null)
-      perfChart.destroy();
+        perfChart.destroy();
     perfChart = resetPerfChart(ctx);
+    if (typeof pieChart === "undefined" || pieChart != null)
+        pieChart.destroy();
+    pieChart = resetPieChart(pieCtx);
+
 
     if (inputType.checked) { // Camera selected
-      navigator.mediaDevices.enumerateDevices().then(
-        function (devices) {
+      navigator.mediaDevices.enumerateDevices().then (
+        function(devices) {
           let selectedCamId = 999;
-          devices.forEach(function (device) {
+          devices.forEach(function(device) {
             if (device.label.includes("GENERAL WEBCAM")) {
-              console.log("CAM, Selected General Web Cam " + device.deviceId);
+              console.log ("CAM, Selected General Web Cam " + device.deviceId);
               selectedCamId = device.deviceId;
             }
           })
-          return selectedCamId;
+        return selectedCamId;
         }
-      ).then(
+      ).then (
         function (selectedCamId) {
-          console.log("CAM, Select device " + selectedCamId);
-          return navigator.mediaDevices.getUserMedia({ video: true });
+          console.log ("CAM, Select device " + selectedCamId);
+          return navigator.mediaDevices.getUserMedia({video: true});
         }
-      ).then(
+      ).then (
         function (stream) {
-          console.log("CAM, Setting video input to selected device");
+          console.log ("CAM, Setting video input to selected device");
           videoElementCamera.srcObject = stream;
           let camPose = setUpMediaPose();
           camPose.onResults(onResults)
@@ -1021,8 +1343,8 @@
           resetOpenCv(videoElementCamera);
           // camera.start();
         }
-      ).catch(
-        function (err) {
+      ).catch (
+        function(err) {
           console.log(err.name + ": " + err.message);
         }
       );
@@ -1032,11 +1354,14 @@
       let videoPose = setUpMediaPose();
       videoPose.onResults(onResults)
       videoElementFile.addEventListener('play', () => {
-        frameCount = 0, exCount = 0, goodCount = 0, badCount = 0, max_angle = 0, min_angle = 150;
+        frameCount = 0, exCount = 0, goodCount = 0, badCount = 0,  max_angle = 0, min_angle = 150;
         last5PosePredict = [], flowClassifyResults = "", prevShoulderY = 0, currShoulderY = 0;
         if (typeof perfChart === "undefined" || perfChart != null)
           perfChart.destroy();
         perfChart = resetPerfChart(ctx);
+        if (typeof pieChart === "undefined" || pieChart != null)
+          pieChart.destroy();
+        pieChart = resetPieChart(pieCtx);
         timerCallback(videoElementFile, videoPose);
       });
     }
@@ -1045,17 +1370,25 @@
   // By default, choose file input
 
   videoElementFile.addEventListener('play', () => {
-    frameCount = 0, exCount = 0, goodCount = 0, badCount = 0, max_angle = 0, min_angle = 150
-    last5PosePredict = [], flowClassifyResults = "", prevShoulderY = 0, currShoulderY = 0;
-    if (typeof perfChart === "undefined" || perfChart != null)
-      perfChart.destroy();
-    perfChart = resetPerfChart(ctx);
-    timerCallback(videoElementFile, pose);
+      frameCount = 0, exCount = 0, goodCount = 0, badCount = 0, max_angle = 0, min_angle = 150
+      last5PosePredict = [], flowClassifyResults = "", prevShoulderY = 0, currShoulderY = 0;
+      if (typeof perfChart === "undefined" || perfChart != null)
+        perfChart.destroy();
+      perfChart = resetPerfChart(ctx);
+      if (typeof pieChart === "undefined" || pieChart != null)
+        pieChart.destroy();
+      pieChart = resetPieChart(pieCtx);
+      timerCallback(videoElementFile, pose);
   });
 
-  var ctx = document.getElementById('perfChart').getContext('2d');
+  var pieCtx = document.getElementById('pieChart').getContext('2d');
 
-  function resetPerfChart(ctxReset) {
+  var ctx = document.getElementById('perfChart').getContext('2d');
+  perfChart = resetPerfChart(ctx);
+  pieChart = resetPieChart(pieCtx);
+
+
+  function resetPerfChart (ctxReset) {
     return new Chart(ctxReset, {
       type: 'bar',
       data: {
@@ -1074,33 +1407,152 @@
             ticks: {
               autoskip: false,
               maxRotation: 90,
-              minRotation: 90
-            }
+              minRotation:90
+             }
           },
           y: {
             ticks: {
               display: false
-            }
+             }
           }
         }
       }
     });
   }
 
-  function updatePerfChart(valid, userAdvice) {
+  function resetPieChart(pieCtxReset) {
+    return new Chart(pieCtxReset, {
+        type: 'pie',
+        data: {
+            labels: ['Good', 'Bad'],
+            datasets: [{
+                data: [goodCount, badCount],
+                backgroundColor: ['lime', 'pink'],
+                borderColor: ['lime', 'pink'],
+                borderWidth: 1
+            }]
+        },
+        options: {}
+    });
+}
+
+
+  function updatePerfChart (valid, userAdvice) {
     if (valid) {
       perfChart.data.labels.push('Good');
       perfChart.data.datasets[0].data.push(1);
       perfChart.data.datasets[0].backgroundColor.push('lime');
       perfChart.data.datasets[0].borderColor.push('lime');
+      // Play "good" audio
+      const goodSpeech = new SpeechSynthesisUtterance(goodCount);
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(goodSpeech);
     } else {
       perfChart.data.labels.push(userAdvice);
       perfChart.data.datasets[0].data.push(1);
       perfChart.data.datasets[0].backgroundColor.push('pink');
       perfChart.data.datasets[0].borderColor.push('pink');
+      // Play "bad" audio with the advice
+      const badSpeech = new SpeechSynthesisUtterance(userAdvice);
+      //But the requirements say "No Count" sooooo the issue of speaking out userAdvice
+      //which is too long and can be cut-off can be ignored
+      //at the end state the error
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(badSpeech);
     }
+    pieChart.data.datasets[0].data = [goodCount, badCount];
+    pieChart.update();
+  } 
+
+  //After updatePerfChart
+  //Hail mary chart export
+
+  const exportChartButton = document.getElementById("exportChartButton");
+  exportChartButton.addEventListener("click", exportChart);
+  //whenever you click the "Export Chart" button, 
+  //the exportChart function will be called, 
+  //and it will export the chart as an image.
+  function exportChart() {
+    var canvas = document.getElementById('perfChart');  // Select the canvas with your chart
+    var dataUrl = canvas.toDataURL('image/png');   // Get chart as a data URL
+
+    // Create a link element
+    var link = document.createElement('a');
+    link.download = 'chart.png';                   // Name of the downloaded file
+    link.href = dataUrl;                           // Link to the image data
+
+    // Append link to the body
+    document.body.appendChild(link);
+
+    // Simulate click to start download
+    link.click();
+
+    // Remove link from the body
+    document.body.removeChild(link);
+    
   }
 
-</script>
+  const exportBase64Button = document.getElementById("exportBase64Button");
+  exportBase64Button.addEventListener("click", exportChartBase64);
+  // whenever you click the "Export Chart Base64" button, 
+  // the exportChartBase64 function will be called, 
+  // and it will export the chart as a base64 string.
+  function exportChartBase64() {
+      var canvas = document.getElementById('perfChart');  // Select the canvas with your chart
+      var dataUrl = canvas.toDataURL('image/png');   // Get chart as a data URL
 
+      // Create a Blob with the base64 string
+      var blob = new Blob([dataUrl], {type: "text/plain;charset=utf-8"});
+
+      // Create a link element
+      var link = document.createElement('a');
+      link.download = 'chart_base64.txt';           // Name of the downloaded file
+      link.href = window.URL.createObjectURL(blob); // Link to the blob
+
+      // Append link to the body
+      document.body.appendChild(link);
+
+      // Simulate click to start download
+      link.click();
+
+      // Remove link from the body
+      document.body.removeChild(link);
+  }
+
+  function speakText(text){
+  const synth = window.speechSynthesis;
+  const utterance = new SpeechSynthesisUtterance(text);
+  synth.speak(utterance);
+  }
+
+  function checkPosePointsInFrame(points, width, height) {
+  for (let i = 0; i < points.length; i++) {
+    if (points[i]['x'] < 0 || points[i]['y'] < 0 || points[i]['x'] > width || points[i]['y'] > height) {
+      return false;
+    }
+  }
+  return true;
+} 
+function checkArmStraightness(shoulder_coordinates, elbow_coordinates, wrist_coordinates){
+    const tolerance = 20;
+
+    let shoulder_elbow_diff = Math.abs(shoulder_coordinates.x - elbow_coordinates.x);
+    let elbow_wrist_diff = Math.abs(elbow_coordinates.x - wrist_coordinates.x);
+
+    if(shoulder_elbow_diff <= tolerance && elbow_wrist_diff <= tolerance){
+      return true;
+    } else {
+      return false;
+    }
+}
+function checkBackStraightness(shoulder_coordinates, hip_coordinates) {
+    const tolerance = 20;  // Tolerance for vertical alignment. 
+    let y_diff = Math.abs(shoulder_coordinates.y - hip_coordinates.y); 
+    if (y_diff <= tolerance) {
+        return true;  // Back is straight.
+    } else {
+        return false;  // Back is not straight.
+    }
+}
+</script>
 </html>
